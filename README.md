@@ -249,3 +249,101 @@ feature_chatbot/
             ├── ChatbotViewModel.kt          // ViewModel quản lý danh sách tin nhắn, trạng thái đang gõ
             └── ChatbotContract.kt           // Định nghĩa State, Event, Effect
   ```    
+
+---
+
+### **HƯỚNG DẪN CÀI ĐẶT VÀ CHẠY DỰ ÁN (PROJECT SETUP GUIDE)**
+
+Quy trình này sẽ hướng dẫn bạn cách clone, cài đặt và chạy dự án **Smart Blood Donation** trên máy tính của bạn.
+
+#### **Giai đoạn 0: Yêu Cầu Cần Có (Prerequisites)**
+
+Trước khi bắt đầu, hãy đảm bảo máy tính của bạn đã cài đặt các công cụ sau:
+
+1.  **Git:** Hệ thống quản lý phiên bản. Nếu chưa có, bạn có thể tải tại [git-scm.com](https://git-scm.com/).
+2.  **Android Studio:** Môi trường phát triển chính. Khuyến nghị sử dụng phiên bản mới nhất (Iguana 2023.2.1 hoặc mới hơn).
+    *   Tải tại: [developer.android.com/studio](https://developer.android.com/studio)
+    *   Trong quá trình cài đặt, hãy đảm bảo bạn đã chọn cài đặt **Android SDK**. Android Studio thường sẽ tự động cài đặt JDK (Java Development Kit) đi kèm, vì vậy bạn không cần cài đặt Java riêng.
+
+#### **Giai đoạn 1: Lấy Mã Nguồn Dự Án (Cloning the Repository)**
+
+Bạn cần sao chép (clone) mã nguồn từ GitHub về máy tính của mình.
+
+1.  **Lấy URL của Repository:**
+    *   Truy cập trang repository của dự án trên GitHub.
+    *   Nhấn vào nút màu xanh lá **"<> Code"**.
+    *   Chọn tab **HTTPS** và sao chép URL. (Ví dụ: `https://github.com/TenNguoiDung/SmartBloodDonation-Android.git`)
+
+2.  **Thực hiện Clone:**
+    Bạn có thể dùng một trong hai cách sau:
+
+    *   **Cách A: Dùng Terminal (Command Line)**
+        ```bash
+        # Mở Terminal (hoặc Git Bash trên Windows)
+        # Di chuyển đến thư mục bạn muốn lưu dự án (ví dụ: D:\Projects)
+        cd D:\Projects
+
+        # Chạy lệnh clone với URL bạn đã sao chép
+        git clone https://github.com/TenNguoiDung/SmartBloodDonation-Android.git
+
+        # Di chuyển vào thư mục dự án vừa được tạo
+        cd SmartBloodDonation-Android
+        ```
+
+    *   **Cách B: Dùng Android Studio (Khuyến khích)**
+        *   Mở Android Studio.
+        *   Trên màn hình chào mừng, chọn **"Get from VCS"** (Lấy từ Hệ thống quản lý phiên bản).
+        *   Dán URL bạn đã sao chép vào ô **URL**.
+        *   Chọn thư mục trên máy tính của bạn ở ô **Directory**.
+        *   Nhấn **"Clone"**. Android Studio sẽ tự động tải dự án về và mở nó ra.
+
+#### **Giai đoạn 2: Lần Mở Đầu Tiên và Đồng Bộ Hóa Gradle (First Open & Sync)**
+
+Đây là bước tự động nhưng quan trọng nhất. Hãy kiên nhẫn.
+
+1.  **Mở Dự Án:**
+    *   Nếu bạn dùng cách B, dự án sẽ được mở tự động.
+    *   Nếu bạn dùng cách A, trong Android Studio, chọn **File -> Open** và trỏ đến thư mục `SmartBloodDonation-Android` bạn vừa clone về.
+
+2.  **Chờ Đợi Quá Trình Đồng Bộ Hóa Tự Động:**
+    *   Ngay khi dự án được mở, Android Studio sẽ bắt đầu một loạt các tác vụ nền. Bạn có thể theo dõi tiến trình ở thanh trạng thái dưới cùng bên phải.
+    *   **Điều gì đang xảy ra?**
+        *   Android Studio đọc file `gradle/wrapper/gradle-wrapper.properties` và thấy dự án yêu cầu **Gradle phiên bản 8.6**.
+        *   Nó sẽ **tự động tải về Gradle 8.6** (việc này có thể mất vài phút nếu đây là lần đầu bạn dùng phiên bản này).
+        *   Sau đó, Gradle sẽ đọc tất cả các file `build.gradle.kts`, `settings.gradle.kts`, và `gradle/libs.versions.toml`.
+        *   Nó sẽ **tải về tất cả các thư viện (dependencies)** và **plugins** được định nghĩa trong dự án.
+        *   Cuối cùng, nó sẽ lập chỉ mục (indexing) toàn bộ file trong dự án.
+
+    **LƯU Ý QUAN TRỌNG:** **KHÔNG LÀM GÌ CẢ** cho đến khi tất cả các thanh tiến trình ở góc dưới bên phải biến mất và bạn không còn thấy thông báo "Syncing project..." hay "Gradle build running...". Việc can thiệp có thể làm hỏng quá trình cài đặt ban đầu.
+
+#### **Giai đoạn 3: Build và Chạy Ứng Dụng**
+
+Sau khi quá trình đồng bộ hoàn tất, bạn đã sẵn sàng để chạy ứng dụng.
+
+1.  **Chọn Thiết Bị Chạy:**
+    *   Ở thanh công cụ trên cùng, bạn sẽ thấy một danh sách thả xuống các thiết bị (thường có chữ 'app' bên cạnh).
+    *   **Nếu dùng máy thật:** Kết nối điện thoại của bạn với máy tính và bật chế độ **"USB Debugging"** (Gỡ lỗi qua USB) trong Tùy chọn nhà phát triển.
+    *   **Nếu dùng máy ảo:** Chọn một máy ảo có sẵn. Nếu chưa có, hãy vào **Tools -> Device Manager** để tạo một máy ảo mới (khuyến nghị API 34).
+
+2.  **Chạy Ứng Dụng:**
+    *   Nhấn vào nút **Run 'app'** (biểu tượng hình tam giác màu xanh lá cây) ở thanh công cụ trên cùng.
+    *   Gradle sẽ biên dịch toàn bộ dự án. Lần build đầu tiên có thể mất vài phút.
+    *   Nếu không có lỗi, ứng dụng sẽ được cài đặt và tự động mở trên thiết bị bạn đã chọn.
+
+#### **Giai đoạn 4: Xử Lý Các Vấn Đề Thường Gặp (Troubleshooting)**
+
+Nếu bạn gặp lỗi trong quá trình build, hãy thử các bước sau theo thứ tự:
+
+1.  **Clean and Rebuild Project:**
+    *   Vào **Build -> Clean Project**.
+    *   Sau khi hoàn tất, vào **Build -> Rebuild Project**.
+
+2.  **Invalidate Caches / Restart (Giải pháp hiệu quả nhất):**
+    *   Đây là cách giải quyết hầu hết các lỗi "kỳ lạ" của Gradle hoặc Android Studio.
+    *   Vào **File -> Invalidate Caches...**
+    *   Trong hộp thoại hiện ra, tick vào ô đầu tiên và nhấn **"Invalidate and Restart"**. Android Studio sẽ khởi động lại và dọn dẹp toàn bộ cache.
+
+3.  **Kiểm Tra Lại SDK Location:**
+    *   Vào **File -> Project Structure... -> SDK Location**.
+    *   Đảm bảo đường dẫn Android SDK là chính xác. Nếu không, hãy chọn lại.
+
