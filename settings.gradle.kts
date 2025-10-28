@@ -21,3 +21,9 @@ dependencyResolutionManagement {
 
 rootProject.name = "SmartBloodDonationAndroid"
 include(":app")
+include(":core")
+include(":feature_auth")
+include(":feature_profile")
+include(":feature_map_booking")
+include(":feature_emergency")
+include(":feature_chatbot")

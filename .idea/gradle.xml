@@ -11,6 +11,12 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/core" />
+            <option value="$PROJECT_DIR$/feature_auth" />
+            <option value="$PROJECT_DIR$/feature_chatbot" />
+            <option value="$PROJECT_DIR$/feature_emergency" />
+            <option value="$PROJECT_DIR$/feature_map_booking" />
+            <option value="$PROJECT_DIR$/feature_profile" />
           </set>
         </option>
       </GradleProjectSettings>
