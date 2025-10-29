@@ -7,6 +7,7 @@ androidGradlePlugin = "8.4.1"
 kotlin = "2.0.0"
 ksp = "2.0.0-1.0.21"
 googleServices = "4.4.2"
+playServicesCoroutines = "1.8.1"
 
 # SDKs
 compileSdk = "34"
@@ -77,6 +78,7 @@ play-services-auth = { group = "com.google.android.gms", name = "play-services-a
 # Asynchronous - Coroutines
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
+kotlinx-coroutines-play-services = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-play-services", version.ref = "playServicesCoroutines" }
 
 # Networking - Retrofit & OkHttp
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }

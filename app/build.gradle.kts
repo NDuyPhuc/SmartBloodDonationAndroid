@@ -13,7 +13,7 @@ android {
     compileSdk = 34
 
         defaultConfig {
-            applicationId = "com.smartblood.core"
+            applicationId = "com.smartblood.donation"
             minSdk = 24
             targetSdk = 34
             versionCode = 1

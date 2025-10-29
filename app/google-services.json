@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:731740765779:android:78cccb0e87421e256150a6",
+        "mobilesdk_app_id": "1:731740765779:android:12b089b55854767d6150a6",
         "android_client_info": {
-          "package_name": "com.smartblood.core"
+          "package_name": "com.smartblood.donation"
         }
       },
       "oauth_client": [],

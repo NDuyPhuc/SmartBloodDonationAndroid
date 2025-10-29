@@ -6,5 +6,6 @@ object Screen {
     const val SPLASH = "splash"
     const val LOGIN = "login"
     const val DASHBOARD = "dashboard"
+    const val REGISTER = "register"
     // Thêm các màn hình khác ở đây...
 }
