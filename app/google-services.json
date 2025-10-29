@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "731740765779",
+    "project_id": "smart-blood-donation-2911",
+    "storage_bucket": "smart-blood-donation-2911.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:731740765779:android:78cccb0e87421e256150a6",
+        "android_client_info": {
+          "package_name": "com.smartblood.core"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA55BbyQtArvpqUJr2kbOCknqQymZTdMfE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
