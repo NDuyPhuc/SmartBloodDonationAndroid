@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.google.services)
     alias(libs.plugins.firebase.crashlytics)
+    alias(libs.plugins.hilt)
 }
 
 android {
@@ -64,6 +65,8 @@ dependencies {
     implementation(project(":feature_map_booking"))
     implementation(project(":feature_emergency"))
     implementation(project(":feature_chatbot"))
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.hilt.navigation.compose)
 
     // Test
     testImplementation(libs.junit)
