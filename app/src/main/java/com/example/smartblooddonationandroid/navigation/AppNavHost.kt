@@ -11,7 +11,9 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import com.smartblood.auth.navigation.authGraph
 import com.smartblood.auth.ui.login.LoginScreen
 import com.smartblood.auth.ui.splash.SplashScreen
 
@@ -25,57 +27,38 @@ fun AppNavHost() {
         composable(Screen.SPLASH) {
             SplashScreen(
                 navigateToLogin = {
-                    navController.navigate(Screen.LOGIN) {
+                    // Điều hướng đến đồ thị xác thực
+                    navController.navigate(Graph.AUTHENTICATION) {
                         // Xóa SplashScreen khỏi back stack
                         popUpTo(Screen.SPLASH) { inclusive = true }
                     }
                 },
                 navigateToDashboard = {
-                    navController.navigate(Screen.DASHBOARD) {
+                    // Điều hướng đến đồ thị chính
+                    navController.navigate(Graph.MAIN) {
                         // Xóa SplashScreen khỏi back stack
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            inclusive = true
-                        }
+                        popUpTo(Screen.SPLASH) { inclusive = true }
                     }
                 }
             )
         }
 
-        composable(Screen.LOGIN) {
-            LoginScreen(
-                navigateToDashboard = {
-                    navController.navigate(Screen.DASHBOARD) {
-                        popUpTo(Screen.LOGIN) { inclusive = true }
-                    }
-                },
-                navigateToRegister = {
-                    navController.navigate(Screen.REGISTER)
-                }
-            )
-        }
 
-        composable(Screen.REGISTER) {
-            RegisterScreen(
-                navigateToDashboard = {
-                    navController.navigate(Screen.DASHBOARD) {
-                        // Xóa toàn bộ back stack xác thực
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            inclusive = true
-                        }
-                    }
-                },
-                navigateBack = {
-                    navController.popBackStack() // Quay lại màn hình trước đó (LoginScreen)
-                }
-            )
-        }
+        // --- ĐÂY LÀ NƠI KẾT NỐI ---
+        authGraph(navController)
 
-        composable(Screen.DASHBOARD) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(text = "DASHBOARD SCREEN")
-            }        }
+        navigation(
+            route = Graph.MAIN,
+            startDestination = Screen.DASHBOARD
+        ) {
+            composable(Screen.DASHBOARD) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = "DASHBOARD SCREEN - WELCOME!")
+                }
+            }
+        }
     }
 }
