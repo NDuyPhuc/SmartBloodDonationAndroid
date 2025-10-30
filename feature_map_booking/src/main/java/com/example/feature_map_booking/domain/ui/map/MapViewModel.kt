@@ -4,9 +4,10 @@ package com.example.feature_map_booking.domain.ui.map
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.trackasia.android.geometry.LatLng
-import com.example.feature_map_booking.domain.usecase.GetNearbyHospitalsUseCase
+import com.google.firebase.firestore.GeoPoint
+import com.example.feature_map_booking.domain.model.Hospital
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -15,7 +16,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MapViewModel @Inject constructor(
-    private val getNearbyHospitalsUseCase: GetNearbyHospitalsUseCase
+    // private val getNearbyHospitalsUseCase: GetNearbyHospitalsUseCase // Sẽ dùng sau
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MapState())
@@ -23,35 +24,47 @@ class MapViewModel @Inject constructor(
 
     fun onEvent(event: MapEvent) {
         when (event) {
-            is MapEvent.OnMapReady -> {
-                _state.update { it.copy(lastKnownLocation = event.location) }
-                // Gọi hàm fetch với kiểu LatLng mới
-                fetchHospitals(event.location)
-            }
-            is MapEvent.OnMarkerClick -> {
-                // Để trống, xử lý trong Composable
+            MapEvent.OnMapLoaded -> {
+                fetchHospitals()
             }
 
-            MapEvent.OnMapLoaded -> TODO()
+            is MapEvent.OnMapReady -> TODO()
+            is MapEvent.OnMarkerClick -> TODO()
         }
     }
 
-    // SỬA THAM SỐ CỦA HÀM NÀY
-    private fun fetchHospitals(location: LatLng) {
+    private fun fetchHospitals() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
-            // Truyền trực tiếp latitude và longitude
-            getNearbyHospitalsUseCase(location.latitude, location.longitude)
-                .onSuccess { hospitals ->
-                    _state.update {
-                        it.copy(isLoading = false, hospitals = hospitals)
-                    }
-                }
-                .onFailure { error ->
-                    _state.update {
-                        it.copy(isLoading = false, error = error.message)
-                    }
-                }
+            try {
+                // Giả lập độ trễ mạng
+                delay(2000)
+
+                // Tạo danh sách bệnh viện giả
+                val fakeHospitals = listOf(
+                    Hospital(
+                        id = "bv_cho_ray",
+                        name = "Bệnh viện Chợ Rẫy",
+                        address = "201B Nguyễn Chí Thanh, P. 12, Q. 5",
+                        location = GeoPoint(10.7581, 106.6622)
+                    ),
+                    Hospital(
+                        id = "bv_truyen_mau",
+                        name = "BV. Truyền máu Huyết học",
+                        address = "118 Hồng Bàng, P. 12, Q. 5",
+                        location = GeoPoint(10.7597, 106.6608)
+                    ),
+                    Hospital(
+                        id = "trung_tam_hien_mau",
+                        name = "Trung tâm Hiến máu Nhân đạo",
+                        address = "106 Thiên Phước, P. 9, Q. Tân Bình",
+                        location = GeoPoint(10.7828, 106.6454)
+                    )
+                )
+                _state.update { it.copy(isLoading = false, hospitals = fakeHospitals) }
+            } catch (e: Exception) {
+                _state.update { it.copy(isLoading = false, error = e.message) }
+            }
         }
     }
 }
