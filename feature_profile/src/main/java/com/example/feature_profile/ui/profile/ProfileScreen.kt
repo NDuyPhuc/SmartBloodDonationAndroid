@@ -1,26 +1,26 @@
-//D:\SmartBloodDonationAndroid\feature_profile\src\main\java\com\example\feature_profile\ui\ProfileScreen.kt
-package com.smartblood.profile.ui
+// Vị trí: feature_profile/src/main/java/com/smartblood/profile/ui/profile/ProfileScreen.kt
+
+package com.smartblood.profile.ui.profile
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.smartblood.profile.ui.ProfileViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel(),
+    // BƯỚC 1: Thêm 2 tham số này để nhận hành động từ bên ngoài
     onNavigateToEditProfile: () -> Unit,
     onNavigateToDonationHistory: () -> Unit
 ) {
@@ -46,30 +46,37 @@ fun ProfileScreen(
                 val profile = state.userProfile!!
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    AsyncImage(
-                        model = profile.avatarUrl ?: "https://example.com/default_avatar.png", // Thay bằng link ảnh mặc định
-                        contentDescription = "Ảnh đại diện",
-                        modifier = Modifier
-                            .size(120.dp)
-                            .clip(CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
+                    // (Bạn có thể thêm AsyncImage để hiển thị avatar ở đây)
+
                     Text(
                         text = profile.fullName,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(text = "Email: ${profile.email}")
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(text = "Nhóm máu: ${profile.bloodType ?: "Chưa cập nhật"}")
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(32.dp))
 
-                    Button(onClick = onNavigateToEditProfile) {
+                    // BƯỚC 2: Kết nối nút bấm với các hàm đã truyền vào
+                    Button(
+                        onClick = onNavigateToEditProfile, // <--- KẾT NỐI Ở ĐÂY
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Text("Chỉnh sửa thông tin")
                     }
-                    OutlinedButton(onClick = onNavigateToDonationHistory) {
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    OutlinedButton(
+                        onClick = onNavigateToDonationHistory, // <--- VÀ Ở ĐÂY
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Text("Xem lịch sử hiến máu")
                     }
                 }

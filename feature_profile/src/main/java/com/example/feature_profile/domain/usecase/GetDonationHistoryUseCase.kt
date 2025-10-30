@@ -4,8 +4,6 @@ package com.smartblood.profile.domain.usecase
 import com.smartblood.profile.domain.repository.ProfileRepository
 import javax.inject.Inject
 
-class GetDonationHistoryUseCase @Inject constructor(
-    private val repository: ProfileRepository
-) {
-    suspend operator fun invoke() = repository.getDonationHistory()
+class GetDonationHistoryUseCase @Inject constructor(private val repository: ProfileRepository) {
+    operator fun invoke() = repository.getDonationHistory()
 }
