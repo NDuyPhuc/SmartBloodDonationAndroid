@@ -4,8 +4,8 @@ package com.example.feature_map_booking.domain.ui.map
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.trackasia.android.geometry.LatLng
 import com.example.feature_map_booking.domain.usecase.GetNearbyHospitalsUseCase
-import com.google.android.gms.maps.model.LatLng
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,17 +25,22 @@ class MapViewModel @Inject constructor(
         when (event) {
             is MapEvent.OnMapReady -> {
                 _state.update { it.copy(lastKnownLocation = event.location) }
+                // Gọi hàm fetch với kiểu LatLng mới
                 fetchHospitals(event.location)
             }
             is MapEvent.OnMarkerClick -> {
-                // Navigation will be handled in the Composable
+                // Để trống, xử lý trong Composable
             }
+
+            MapEvent.OnMapLoaded -> TODO()
         }
     }
 
+    // SỬA THAM SỐ CỦA HÀM NÀY
     private fun fetchHospitals(location: LatLng) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
+            // Truyền trực tiếp latitude và longitude
             getNearbyHospitalsUseCase(location.latitude, location.longitude)
                 .onSuccess { hospitals ->
                     _state.update {

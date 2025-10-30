@@ -5,7 +5,7 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
     // THÊM MỚI: Plugin để quản lý secrets, bao gồm API key
-    alias(libs.plugins.maps.secrets)
+//    alias(libs.plugins.maps.secrets)
 }
 
 android {
@@ -47,6 +47,8 @@ dependencies {
     implementation(libs.play.services.maps)
     implementation(libs.maps.compose) // Google Maps for Jetpack Compose
     implementation(libs.play.services.location)
+    implementation(libs.trackasia.sdk)
+    implementation(libs.trackasia.annotation.plugin)
 
     // Hilt
     implementation(libs.hilt.android)

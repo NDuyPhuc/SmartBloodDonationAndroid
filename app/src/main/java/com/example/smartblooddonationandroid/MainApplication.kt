@@ -1,9 +1,16 @@
-// D:\SmartBloodDonationAndroid\app\src\main\java\com\example\smartblooddonationandroid\MainApplication.kt
+// app/src/main/java/com/smartblood/donation/MainApplication.kt
+package com.smartblood.donation
 
-package com.smartblood.donation // Hoặc package của bạn
 
 import android.app.Application
+import com.trackasia.android.TrackAsia
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp
-class MainApplication : Application()
+class MainApplication : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        // Chỉ khởi tạo TrackAsia ở đây là đủ
+        TrackAsia.getInstance(applicationContext)
+    }
+}

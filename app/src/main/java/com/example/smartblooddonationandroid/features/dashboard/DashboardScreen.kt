@@ -13,7 +13,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
 fun DashboardScreen(
-    viewModel: DashboardViewModel = hiltViewModel()
+    viewModel: DashboardViewModel = hiltViewModel(),
+    onFindDonationCenters: () -> Unit,
+    onViewEmergencyRequests: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -39,16 +41,24 @@ fun DashboardScreen(
             }
 
             // Các nút Call-to-Action
-            Button(onClick = { /* TODO */ }, modifier = Modifier.fillMaxWidth()) {
+            Button(onClick = onFindDonationCenters, modifier = Modifier.fillMaxWidth()) {
                 Text("Tìm điểm hiến máu gần đây")
             }
-            OutlinedButton(onClick = { /* TODO */ }, modifier = Modifier.fillMaxWidth()) {
+            OutlinedButton(onClick = onViewEmergencyRequests, modifier = Modifier.fillMaxWidth()) {
                 Text("Xem yêu cầu khẩn cấp")
             }
 
             // Danh sách yêu cầu khẩn cấp (tạm thời)
-            Text("Yêu cầu khẩn cấp gần đây:", style = MaterialTheme.typography.titleMedium)
-            Box(modifier = Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center){
+            Text(
+                "Yêu cầu khẩn cấp gần đây:",
+                style = MaterialTheme.typography.titleMedium
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
                 Text("Chưa có yêu cầu nào.")
             }
         }

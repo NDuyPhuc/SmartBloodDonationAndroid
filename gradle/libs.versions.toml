@@ -9,11 +9,17 @@ ksp = "2.0.0-1.0.21"
 googleServices = "4.4.2"
 mapsSecretsPlugin = "2.0.1" # <--- THÊM MỚI: Plugin cho Maps API Key
 materialIconsExtended = "1.6.8"
+trackasia = "2.0.2"
+accompanist = "0.32.0"
 
 # SDKs
 compileSdk = "34"
 minSdk = "24"
 targetSdk = "34"
+
+# THÊM CÁC THƯ VIỆN TRACKASIA
+trackasia-sdk = { group = "com.track-asia", name = "trackasia-android-sdk", version.ref = "trackasia" }
+trackasia-annotation-plugin = { group = "com.track-asia", name = "trackasia-android-plugin-annotation-v9", version.ref = "trackasia" }
 
 # Libraries
 coreKtx = "1.13.1"
@@ -48,6 +54,9 @@ firebaseAuth = "23.0.0"
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
+
+accompanist-navigation-animation = { group = "com.google.accompanist", name = "accompanist-navigation-animation", version.ref = "accompanist" }
+
 
 # Jetpack Compose
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
@@ -89,6 +98,8 @@ play-services-auth = { group = "com.google.android.gms", name = "play-services-a
 maps-compose = { group = "com.google.maps.android", name = "maps-compose", version.ref = "mapsCompose" }
 play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
+trackasia-sdk = { group = "io.github.track-asia", name = "android-sdk", version.ref = "trackasia" }
+trackasia-annotation-plugin = { group = "io.github.track-asia", name = "android-plugin-annotation-v9", version = "2.0.1" }
 
 # Asynchronous - Coroutines
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
