@@ -8,8 +8,6 @@ import com.smartblood.profile.domain.usecase.GetUserProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -36,26 +34,20 @@ class DashboardViewModel @Inject constructor(
     }
 
     private fun loadDashboardData() {
-        // Bắt đầu thu thập (collect) dữ liệu từ Flow mà UseCase trả về
-        getUserProfileUseCase()
-            .onEach { userProfile -> // <-- SỬA Ở ĐÂY: Dùng .onEach để xử lý mỗi item được Flow phát ra
-                if (userProfile != null) {
-                    // Nếu nhận được thông tin người dùng
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            userName = userProfile.fullName, // <-- Giờ đã hợp lệ
-                            bloodType = userProfile.bloodType ?: "N/A", // <-- Giờ đã hợp lệ
-                            nextDonationMessage = calculateNextDonationDateUseCase(userProfile)
-                        )
-                    }
-                } else {
-                    // Xử lý trường hợp không có dữ liệu (ví dụ: người dùng đăng xuất)
-                    _state.update {
-                        it.copy(isLoading = false, userName = "Không tải được dữ liệu")
-                    }
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+            getUserProfileUseCase().onSuccess { userProfile ->
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        userName = userProfile.fullName,
+                        bloodType = userProfile.bloodType ?: "N/A",
+                        nextDonationMessage = calculateNextDonationDateUseCase(userProfile)
+                    )
                 }
+            }.onFailure {
+                _state.update { it.copy(isLoading = false, userName = "Không tải được dữ liệu") }
             }
-            .launchIn(viewModelScope) // Bắt đầu coroutine để lắng nghe Flow này
+        }
     }
 }

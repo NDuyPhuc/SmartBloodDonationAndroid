@@ -67,7 +67,6 @@ dependencies {
     // Local Database - Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
-    implementation(libs.bundles.room)
     ksp(libs.androidx.room.compiler)
 
     // Remote - Firebase
