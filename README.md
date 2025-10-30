@@ -8,15 +8,23 @@ SmartBloodDonation/
 ├── app/                             // Module chính, nơi ghép nối các module feature
 │   ├── build.gradle.kts
 │   └── src/main/
-│       ├── java/com/smartblood/
-│       │   ├── MainApplication.kt   // Lớp Application, khởi tạo Hilt
-│       │   ├── MainActivity.kt      // Activity duy nhất, host của NavHost
-│       │   ├── di/                  // DI cho module app
-│       │   │   └── AppModule.kt
-│       │   └── navigation/          // Quản lý điều hướng toàn ứng dụng
-│       │       ├── AppNavHost.kt    // Cấu hình NavController và các graph
-│       │       └── Screen.kt        // Định nghĩa các route
+│       ├── java/com/smartblood/donation/  // <- Package name của app
+│       │   ├── MainApplication.kt
+│       │   ├── MainActivity.kt
+│       │   ├─ di/
+│       │   │  └── AppModule.kt
+│       │   ├─ features/                // **THÊM MỚI: Chứa các màn hình của app**
+│       │   │  └─ dashboard/
+│       │   │     ├─ DashboardScreen.kt // **UI của Dashboard**
+│       │   │     └─ DashboardViewModel.kt // **ViewModel của Dashboard**
+│       │   ├─ navigation/              // Quản lý điều hướng toàn ứng dụng
+│       │   │  ├─ AppNavHost.kt
+│       │   │  ├─ BottomNavItem.kt     // **THÊM MỚI: Định nghĩa các mục cho Bottom Nav**
+│       │   │  └─ Screen.kt
+│       │   └─ ui/                      // **THÊM MỚI: Chứa các Composable dùng chung của app**
+│       │      └─ MainScreen.kt         // **Màn hình chính chứa Bottom Nav và NavHost con**
 │       └── res/
+│
 │
 ├── core/                            // Module lõi chứa code dùng chung
 │   ├── build.gradle.kts
@@ -82,6 +90,9 @@ SmartBloodDonation/
 │               ├── RegisterScreen.kt
 │               ├── RegisterViewModel.kt
 │               └── RegisterContract.kt
+│           └─ splash/                  // **THÊM MỚI: Màn hình Splash**
+│              ├─ SplashScreen.kt
+│              └─ SplashViewModel.kt
 │
 ├── feature_profile/                 // Module tính năng: Hồ sơ
 │   ├── build.gradle.kts
@@ -101,17 +112,21 @@ SmartBloodDonation/
 │       │   └── usecase/
 │       │       ├── GetUserProfileUseCase.kt
 │       │       └── GetDonationHistoryUseCase.kt
+│       │       └─ CalculateNextDonationDateUseCase.kt // **THÊM MỚI**
 │       ├── di/
 │       │   └── ProfileModule.kt
 │       └── ui/
 │           ├── navigation/
 │           │   └── ProfileNavigation.kt
-│           ├── profile_detail/
-│           │   ├── ProfileScreen.kt
-│           │   └── ProfileViewModel.kt
-│           └── donation_history/
-│               ├── DonationHistoryScreen.kt
-│               └── DonationHistoryViewModel.kt
+│           ├─ profile/                 // **CẬP NHẬT: Cấu trúc lại cho gọn**
+│           │  ├─ ProfileScreen.kt
+│           │  ├─ ProfileViewModel.kt
+│           │  └─ ProfileContract.kt
+│           ├─ edit/                    // **CẬP NHẬT: Màn hình chỉnh sửa**
+│           │  ├─ EditProfileScreen.kt
+│           └─ history/                 // **CẬP NHẬT: Cấu trúc lại**
+│              ├─ DonationHistoryScreen.kt
+│              └── DonationHistoryViewModel.kt
 │
 feature_map_booking/
 └── src/main/java/com/smartblood/mapbooking/
