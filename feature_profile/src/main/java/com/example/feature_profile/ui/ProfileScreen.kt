@@ -66,10 +66,11 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    Button(onClick = onNavigateToEditProfile) {
+                    Button(onClick = onNavigateToEditProfile, modifier = Modifier.fillMaxWidth()) {
+
                         Text("Chỉnh sửa thông tin")
                     }
-                    OutlinedButton(onClick = onNavigateToDonationHistory) {
+                    OutlinedButton(onClick = onNavigateToDonationHistory,  modifier = Modifier.fillMaxWidth()) {
                         Text("Xem lịch sử hiến máu")
                     }
                 }

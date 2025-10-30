@@ -7,6 +7,8 @@ import com.smartblood.auth.navigation.AUTH_GRAPH_ROUTE
 object Screen {
     const val SPLASH = "splash"
     const val DASHBOARD = "dashboard"
+    const val EDIT_PROFILE = "edit_profile"
+    const val DONATION_HISTORY = "donation_history"
     // Thêm các màn hình khác ở đây...
 }
 

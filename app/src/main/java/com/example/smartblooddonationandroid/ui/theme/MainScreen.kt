@@ -8,12 +8,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.example.feature_map_booking.domain.ui.booking.BookingScreen
+import com.example.feature_map_booking.domain.ui.location_detail.LocationDetailScreen
+import com.example.feature_map_booking.domain.ui.map.MapScreen
+import com.example.feature_profile.ui.DonationHistoryScreen
+import com.example.feature_profile.ui.EditProfileScreen
 import com.smartblood.donation.features.dashboard.DashboardScreen
 import com.smartblood.donation.navigation.BottomNavItem
+import com.smartblood.donation.navigation.Screen
 import com.smartblood.profile.ui.ProfileScreen
 
 @Composable
@@ -70,15 +78,57 @@ fun MainScreen() {
                 DashboardScreen()
             }
             composable(BottomNavItem.Map.route) {
-                // Tạm thời hiển thị một Text giữ chỗ cho màn hình Bản đồ
-                // TODO: Thay thế bằng MapScreen() từ feature_map_booking
-                Text("Map Screen - Sẽ được triển khai")
+                MapScreen(
+                    onNavigateToLocationDetail = { hospitalId ->
+                        navController.navigate("location_detail/$hospitalId")
+                    }
+                )
             }
             composable(BottomNavItem.Profile.route) {
                 // Sử dụng ProfileScreen đã tạo từ feature_profile
                 ProfileScreen(
-                    onNavigateToEditProfile = { /* TODO: Điều hướng đến màn hình sửa hồ sơ */ },
-                    onNavigateToDonationHistory = { /* TODO: Điều hướng đến màn hình lịch sử */ }
+                    onNavigateToEditProfile = {
+                        navController.navigate(Screen.EDIT_PROFILE)
+                    },
+                    onNavigateToDonationHistory = {
+                        navController.navigate(Screen.DONATION_HISTORY)
+                    }
+                )
+            }
+            composable(
+                route = "location_detail/{hospitalId}",
+                arguments = listOf(navArgument("hospitalId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                LocationDetailScreen(
+                    onNavigateToBooking = { hospitalId, hospitalName ->
+                        navController.navigate("booking/$hospitalId/$hospitalName")
+                    },
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable(
+                route = "booking/{hospitalId}/{hospitalName}",
+                arguments = listOf(
+                    navArgument("hospitalId") { type = NavType.StringType },
+                    navArgument("hospitalName") { type = NavType.StringType }
+                )
+            ) {
+                BookingScreen(
+                    onBookingSuccess = {
+                        // Quay về màn hình bản đồ sau khi đặt lịch thành công
+                        navController.popBackStack(BottomNavItem.Map.route, inclusive = false)
+                    },
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable(route = Screen.EDIT_PROFILE) {
+                EditProfileScreen(
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable(route = Screen.DONATION_HISTORY) {
+                DonationHistoryScreen(
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
         }
