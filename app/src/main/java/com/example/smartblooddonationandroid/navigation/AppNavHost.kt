@@ -16,6 +16,7 @@ import androidx.navigation.compose.rememberNavController
 import com.smartblood.auth.navigation.authGraph
 import com.smartblood.auth.ui.login.LoginScreen
 import com.smartblood.auth.ui.splash.SplashScreen
+import com.smartblood.donation.ui.MainScreen
 
 @Composable
 fun AppNavHost() {
@@ -47,18 +48,8 @@ fun AppNavHost() {
         // --- ĐÂY LÀ NƠI KẾT NỐI ---
         authGraph(navController)
 
-        navigation(
-            route = Graph.MAIN,
-            startDestination = Screen.DASHBOARD
-        ) {
-            composable(Screen.DASHBOARD) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = "DASHBOARD SCREEN - WELCOME!")
-                }
-            }
+        composable(Graph.MAIN) {
+            MainScreen()
         }
     }
 }
