@@ -154,7 +154,7 @@ fun TrackAsiaMapComposable(
                             SymbolOptions()
                                 .withLatLng(LatLng(geoPoint.latitude, geoPoint.longitude))
                                 .withIconImage(CUSTOM_MARKER_ID)
-                                .withIconSize(0.2f)
+                                .withIconSize(0.1f)
                                 .withIconAnchor("bottom")
                                 .withData(JsonParser.parseString("""{"hospital_id": "${hospital.id}"}"""))
                         }
