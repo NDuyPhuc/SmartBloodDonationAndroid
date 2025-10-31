@@ -2,6 +2,7 @@
 
 package com.example.feature_map_booking.domain.ui.map
 
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -16,12 +17,14 @@ fun MapScreen(
     onNavigateToLocationDetail: (String) -> Unit
 ) {
     val state by viewModel.state.collectAsState()
+    Log.d("MapDebug", "MapScreen recomposed. Hospitals count: ${state.hospitals.size}")
 
     Box(Modifier.fillMaxSize()) {
         // Gọi Composable bản đồ và truyền dữ liệu vào
         TrackAsiaMapComposable(
             hospitals = state.hospitals,
-            onMarkerClick = onNavigateToLocationDetail
+            onMarkerClick = onNavigateToLocationDetail,
+//            onMapReady = { viewModel.onEvent(MapEvent.OnMapLoaded) }
         )
 
         // Vẫn hiển thị loading indicator từ ViewModel
