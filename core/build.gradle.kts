@@ -8,7 +8,7 @@ plugins {
     // Plugin cho KSP (để Hilt và Room hoạt động)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.compose.compiler)
-
+    alias(libs.plugins.android.secrets.gradle.plugin)
 }
 
 android {
@@ -43,6 +43,7 @@ android {
     // Bật tính năng Jetpack Compose
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
 }
@@ -93,4 +94,7 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     debugImplementation(libs.androidx.compose.ui.tooling)
+
+    implementation("com.cloudinary:cloudinary-android:2.4.0")
+
 }

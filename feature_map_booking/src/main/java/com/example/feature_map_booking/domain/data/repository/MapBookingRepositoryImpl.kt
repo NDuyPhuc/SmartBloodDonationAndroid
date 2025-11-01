@@ -101,4 +101,20 @@ class MapBookingRepositoryImpl @Inject constructor(
             Result.failure(e) // Trả về thất bại nếu có lỗi khi lưu vào Firestore
         }
     }
+
+    override suspend fun getMyAppointments(): Result<List<Appointment>> {
+        val currentUser = auth.currentUser ?: return Result.failure(Exception("User not authenticated."))
+        return try {
+            val querySnapshot = firestore.collection("appointments")
+                .whereEqualTo("userId", currentUser.uid)
+                .orderBy("dateTime", com.google.firebase.firestore.Query.Direction.DESCENDING) // Sắp xếp mới nhất lên đầu
+                .get()
+                .await()
+
+            val appointments = querySnapshot.toObjects(Appointment::class.java)
+            Result.success(appointments)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }
