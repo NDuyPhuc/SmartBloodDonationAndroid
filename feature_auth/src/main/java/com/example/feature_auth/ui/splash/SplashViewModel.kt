@@ -1,6 +1,6 @@
 // feature_auth/src/main/java/com/smartblood/auth/ui/splash/SplashViewModel.kt
 
-package com.smartblood.auth.ui.splash
+package com.example.feature_auth.ui.splash
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

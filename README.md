@@ -284,7 +284,7 @@ Trước khi bắt đầu, hãy đảm bảo máy tính của bạn đã cài đ
 
 Bạn cần sao chép (clone) mã nguồn từ GitHub về máy tính của mình.
 
-1.  **Lấy URL của Repository:**
+1.  **Lấy URL của Repository**
     *   Truy cập trang repository của dự án trên GitHub.
     *   Nhấn vào nút màu xanh lá **"<> Code"**.
     *   Chọn tab **HTTPS** và sao chép URL. (Ví dụ: `https://github.com/TenNguoiDung/SmartBloodDonation-Android.git`)
