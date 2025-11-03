@@ -33,6 +33,9 @@ class BookingViewModel @Inject constructor(
         _state.update { it.copy(hospitalId = hospitalId, hospitalName = savedStateHandle["hospitalName"] ?: "") }
         fetchSlotsForDate(Date())
     }
+    fun clearError() {
+        _state.update { it.copy(error = null) }
+    }
 
     fun onEvent(event: BookingEvent) {
         when (event) {
@@ -51,7 +54,7 @@ class BookingViewModel @Inject constructor(
 
     private fun fetchSlotsForDate(date: Date) {
         viewModelScope.launch {
-            _state.update { it.copy(isLoadingSlots = true) }
+            _state.update { it.copy(isLoadingSlots = true, error = null) } // Xóa lỗi cũ khi fetch lại
             getAvailableSlotsUseCase(hospitalId, date)
                 .onSuccess { slots ->
                     _state.update { it.copy(isLoadingSlots = false, timeSlots = slots) }
@@ -63,25 +66,45 @@ class BookingViewModel @Inject constructor(
     }
 
     private fun confirmBooking() {
-        var time = selectedTime ?: return // Cần thông báo lỗi cho người dùng
-        val calendar = Calendar.getInstance().apply {
-            time = _state.value.selectedDate.toString()
-            val (hour, minute) = time.split(":").map { it.toInt() }
-            set(Calendar.HOUR_OF_DAY, hour)
-            set(Calendar.MINUTE, minute)
-            set(Calendar.SECOND, 0)
+        // 1. Lấy giờ đã chọn. Nếu chưa chọn, báo lỗi và dừng lại.
+        val timeString = selectedTime ?: run {
+            _state.update { it.copy(error = "Vui lòng chọn một khung giờ.") }
+            return
         }
-        val finalDateTime = calendar.time
 
         viewModelScope.launch {
-            _state.update { it.copy(isBooking = true) }
-            bookAppointmentUseCase(hospitalId, finalDateTime)
-                .onSuccess {
-                    _state.update { it.copy(isBooking = false, bookingSuccess = true) }
+            _state.update { it.copy(isBooking = true, error = null) }
+
+            try {
+                // 2. Tạo đối tượng Calendar và đặt ngày tháng năm từ state
+                val calendar = Calendar.getInstance().apply {
+                    time = _state.value.selectedDate
+
+                    // 3. Phân tích chuỗi giờ (vd: "14:00") để lấy giờ và phút
+                    val (hour, minute) = timeString.split(":").map { it.toInt() }
+
+                    // 4. Cập nhật giờ, phút, giây cho Calendar
+                    set(Calendar.HOUR_OF_DAY, hour)
+                    set(Calendar.MINUTE, minute)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
                 }
-                .onFailure { error ->
-                    _state.update { it.copy(isBooking = false, error = error.message) }
-                }
+
+                // 5. Lấy ra đối tượng Date cuối cùng đã được kết hợp
+                val finalDateTime = calendar.time
+
+                // 6. Gọi UseCase để đặt lịch
+                bookAppointmentUseCase(hospitalId, finalDateTime)
+                    .onSuccess {
+                        _state.update { it.copy(isBooking = false, bookingSuccess = true) }
+                    }
+                    .onFailure { error ->
+                        _state.update { it.copy(isBooking = false, error = error.message) }
+                    }
+            } catch (e: NumberFormatException) {
+                // 7. Bắt lỗi nếu định dạng giờ không hợp lệ
+                _state.update { it.copy(isBooking = false, error = "Định dạng giờ không hợp lệ.") }
+            }
         }
     }
 }

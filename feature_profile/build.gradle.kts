@@ -72,6 +72,7 @@ dependencies {
     // THÊM VÀO: Testing cho Compose
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    implementation(project(":feature_map_booking"))
 
     implementation(libs.trackasia.sdk)
     implementation(libs.trackasia.annotation.plugin)

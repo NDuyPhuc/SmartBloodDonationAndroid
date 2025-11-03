@@ -1,4 +1,7 @@
+
+
 plugins {
+    alias(libs.plugins.android.secrets.gradle.plugin)
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose.compiler)
@@ -13,14 +16,15 @@ android {
     namespace = "com.example.smartblooddonationandroid"
     compileSdk = 34
 
-        defaultConfig {
-            applicationId = "com.smartblood.donation"
-            minSdk = 24
-            targetSdk = 34
-            versionCode = 1
-            versionName = "1.0"
+    defaultConfig {
+        applicationId = "com.smartblood.donation"
+        minSdk = 24
+        targetSdk = 34
+        versionCode = 1
+        versionName = "1.0"
 
-            testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
     }
 
     buildTypes {
@@ -41,6 +45,14 @@ android {
     }
     buildFeatures {
         compose = true
+        // Thêm dòng này để truy cập BuildConfig
+        buildConfig = true
+    }
+    // Thêm khối packagingOptions nếu chưa có
+    packagingOptions {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
     }
 }
 
@@ -57,6 +69,8 @@ dependencies {
 
     // Hilt
     implementation(libs.hilt.android)
+    implementation(libs.androidx.viewbinding)
+    implementation(libs.transport.backend.cct)
     ksp(libs.hilt.compiler)
 
     // Dependencies cho các feature module
@@ -66,6 +80,7 @@ dependencies {
     implementation(project(":feature_map_booking"))
     implementation(project(":feature_emergency"))
     implementation(project(":feature_chatbot"))
+
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.hilt.navigation.compose)
 
@@ -78,11 +93,10 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
-
     //TrackAsia
     implementation(libs.trackasia.sdk)
     implementation(libs.trackasia.annotation.plugin)
 
     implementation(libs.accompanist.navigation.animation)
-
+    implementation("com.cloudinary:cloudinary-android:2.4.0")
 }

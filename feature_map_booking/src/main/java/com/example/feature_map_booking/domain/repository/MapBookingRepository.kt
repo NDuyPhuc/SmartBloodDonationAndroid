@@ -2,6 +2,7 @@ package com.example.feature_map_booking.domain.repository
 
 // feature_map_booking/src/main/java/com/smartblood/mapbooking/domain/repository/MapBookingRepository.kt
 
+import com.example.feature_map_booking.domain.model.Appointment
 import com.example.feature_map_booking.domain.model.Hospital
 import com.example.feature_map_booking.domain.model.TimeSlot
 import java.util.Date
@@ -15,4 +16,7 @@ interface MapBookingRepository {
         hospitalId: String,
         dateTime: Date
     ): Result<Unit>
+
+    suspend fun getMyAppointments(): Result<List<Appointment>>
+
 }

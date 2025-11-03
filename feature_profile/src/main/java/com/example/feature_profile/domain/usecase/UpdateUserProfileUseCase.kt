@@ -1,5 +1,5 @@
 //D:\SmartBloodDonationAndroid\feature_profile\src\main\java\com\example\feature_profile\domain\usecase\UpdateUserProfileUseCase.kt
-package com.smartblood.profile.domain.usecase
+package com.example.feature_profile.domain.usecase
 
 import com.smartblood.profile.domain.model.UserProfile
 import com.smartblood.profile.domain.repository.ProfileRepository

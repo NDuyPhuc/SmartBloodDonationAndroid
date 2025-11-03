@@ -3,7 +3,8 @@ package com.example.feature_map_booking.domain.ui.booking
 
 // feature_map_booking/src/main/java/com/smartblood/mapbooking/ui/booking/BookingScreen.kt
 
-
+import android.app.DatePickerDialog
+import android.widget.DatePicker
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -15,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -32,8 +34,24 @@ fun BookingScreen(
     onNavigateBack: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
-
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+
+    val calendar = Calendar.getInstance()
+    val datePickerDialog = remember {
+        DatePickerDialog(
+            context,
+            { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
+                calendar.set(year, month, dayOfMonth)
+                viewModel.onEvent(BookingEvent.OnDateSelected(calendar.time))
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).apply {
+            datePicker.minDate = System.currentTimeMillis()
+        }
+    }
 
     LaunchedEffect(state.bookingSuccess) {
         if (state.bookingSuccess) {
@@ -44,6 +62,7 @@ fun BookingScreen(
     LaunchedEffect(state.error) {
         state.error?.let {
             snackbarHostState.showSnackbar(it)
+            viewModel.clearError()
         }
     }
 
@@ -67,6 +86,7 @@ fun BookingScreen(
             modifier = Modifier
                 .padding(paddingValues)
                 .padding(16.dp)
+                .fillMaxSize()
         ) {
             Text(
                 text = state.hospitalName,
@@ -75,18 +95,12 @@ fun BookingScreen(
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Calendar Picker (Basic implementation)
-            // For a real app, use a proper library or build a more complex one
-            val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+            val dateFormat = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
             Text("Chọn ngày: ${dateFormat.format(state.selectedDate)}")
             Spacer(modifier = Modifier.height(8.dp))
-            Button(onClick = {
-                // TODO: Show a DatePickerDialog
-                // For now, we just fetch for the current date
-            }) {
+            Button(onClick = { datePickerDialog.show() }) {
                 Text("Đổi ngày")
             }
-
 
             Spacer(modifier = Modifier.height(24.dp))
             Text("Chọn khung giờ:", style = MaterialTheme.typography.titleMedium)
@@ -95,6 +109,7 @@ fun BookingScreen(
             if (state.isLoadingSlots) {
                 CircularProgressIndicator()
             } else {
+                // --- DÒNG ĐÃ SỬA LỖI ---
                 var selectedTime by remember { mutableStateOf<String?>(null) }
 
                 LazyVerticalGrid(

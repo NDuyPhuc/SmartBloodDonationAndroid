@@ -3,8 +3,8 @@ package com.smartblood.donation.features.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.feature_profile.domain.usecase.GetUserProfileUseCase
 import com.smartblood.profile.domain.usecase.CalculateNextDonationDateUseCase
-import com.smartblood.profile.domain.usecase.GetUserProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

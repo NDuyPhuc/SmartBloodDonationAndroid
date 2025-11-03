@@ -25,12 +25,12 @@ import com.example.feature_map_booking.domain.ui.location_detail.LocationDetailS
 import com.example.feature_map_booking.domain.ui.map.MapScreen
 import com.example.feature_profile.ui.DonationHistoryScreen
 import com.example.feature_profile.ui.EditProfileScreen
+import com.example.feature_profile.ui.ProfileScreen
 
 // Sửa các import cũ (nếu có) để trỏ đến các package đúng
 import com.smartblood.donation.features.dashboard.DashboardScreen
 import com.smartblood.donation.navigation.BottomNavItem
 import com.smartblood.donation.navigation.Screen
-import com.smartblood.profile.ui.ProfileScreen
 
 
 // THÊM ANNOTATION NÀY
