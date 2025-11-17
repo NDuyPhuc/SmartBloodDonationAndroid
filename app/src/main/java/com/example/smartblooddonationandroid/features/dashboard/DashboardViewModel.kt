@@ -3,16 +3,14 @@ package com.smartblood.donation.features.dashboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.smartblood.core.domain.model.BloodRequest
+import com.smartblood.core.domain.model.UserProfile
 import com.example.feature_emergency.domain.usecase.AcceptEmergencyRequestUseCase
 import com.example.feature_emergency.domain.usecase.GetActiveEmergencyRequestsUseCase
 import com.example.feature_emergency.domain.usecase.GetMyPledgedRequestsUseCase
 import com.example.feature_profile.domain.usecase.GetUserProfileUseCase
 import com.smartblood.profile.domain.usecase.CalculateNextDonationDateUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -24,7 +22,8 @@ sealed class DashboardEvent {
 
 // State được cập nhật hoàn chỉnh
 data class DashboardState(
-    val isLoading: Boolean = true,
+    val isLoadingProfile: Boolean = true,
+    val isLoadingRequests: Boolean = true,
     val isPledging: Boolean = false,
     val userName: String = "",
     val bloodType: String = "N/A",
@@ -47,13 +46,75 @@ class DashboardViewModel @Inject constructor(
     val state = _state.asStateFlow()
 
     init {
-        loadDashboardData()
+        // Bắt đầu lắng nghe dữ liệu ngay khi ViewModel được tạo
+        listenToDashboardData()
     }
 
     fun onEvent(event: DashboardEvent) {
         when (event) {
             is DashboardEvent.OnAcceptRequestClicked -> acceptRequest(event.requestId)
-            DashboardEvent.OnPledgeSuccessMessageShown -> _state.update { it.copy(pledgeSuccess = false) }
+            DashboardEvent.OnPledgeSuccessMessageShown -> _state.update { it.copy(pledgeSuccess = false, error = null) }
+        }
+    }
+
+    private fun listenToDashboardData() {
+        // 1. Lắng nghe thông tin User Profile
+        viewModelScope.launch {
+            _state.update { it.copy(isLoadingProfile = true) }
+            val profileResult = getUserProfileUseCase() // Lấy thông tin user một lần
+            profileResult.onSuccess { userProfile ->
+                _state.update {
+                    it.copy(
+                        isLoadingProfile = false,
+                        userName = userProfile.fullName,
+                        bloodType = userProfile.bloodType ?: "N/A",
+                        nextDonationMessage = calculateNextDonationDateUseCase(userProfile)
+                    )
+                }
+            }.onFailure { error ->
+                _state.update { it.copy(isLoadingProfile = false, error = error.message) }
+            }
+        }
+
+        // 2. Lắng nghe và kết hợp dữ liệu từ hai nguồn Flow
+        viewModelScope.launch {
+            _state.update { it.copy(isLoadingRequests = true) }
+
+            // Lấy Flow của các yêu cầu đang hoạt động
+            val activeRequestsFlow = getActiveEmergencyRequestsUseCase()
+
+            // Lấy Flow của các yêu cầu user đã chấp nhận
+            val pledgedRequestsFlow = getMyPledgedRequestsUseCase()
+
+            // Dùng `combine` để tự động tính toán lại danh sách hiển thị
+            // mỗi khi một trong hai flow trên có dữ liệu mới
+            combine(activeRequestsFlow, pledgedRequestsFlow) { activeResult, pledgedResult ->
+
+                // Xử lý lỗi từ các Flow
+                val errorMessage = activeResult.exceptionOrNull()?.message
+                    ?: pledgedResult.exceptionOrNull()?.message
+                if (errorMessage != null) {
+                    _state.update { it.copy(isLoadingRequests = false, error = errorMessage) }
+                    return@combine
+                }
+
+                val activeRequests = activeResult.getOrNull() ?: emptyList()
+                val pledgedRequestIds = pledgedResult.getOrNull()?.map { it.id }?.toSet() ?: emptySet()
+
+                // Lọc ra danh sách cần hiển thị
+                val displayableRequests = activeRequests.filter { it.id !in pledgedRequestIds }
+
+                _state.update {
+                    it.copy(
+                        isLoadingRequests = false,
+                        displayableEmergencyRequests = displayableRequests
+                    )
+                }
+
+            }.catch { e ->
+                // Bắt các lỗi không mong muốn từ Flow
+                _state.update { it.copy(isLoadingRequests = false, error = e.message) }
+            }.collect() // Bắt đầu lắng nghe
         }
     }
 
@@ -75,49 +136,10 @@ class DashboardViewModel @Inject constructor(
 
             val acceptResult = acceptEmergencyRequestUseCase(requestId, userProfile)
             acceptResult.onSuccess {
+                // Chỉ cần bật cờ thành công. Flow sẽ tự động cập nhật danh sách.
                 _state.update { it.copy(isPledging = false, pledgeSuccess = true) }
-                loadDashboardData() // Tải lại toàn bộ dữ liệu để cập nhật danh sách
             }.onFailure { error ->
                 _state.update { it.copy(isPledging = false, error = "Lỗi: ${error.message}") }
-            }
-        }
-    }
-
-    private fun loadDashboardData() {
-        viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, error = null) }
-
-            // Chạy song song 3 tác vụ
-            val profileDeferred = async { getUserProfileUseCase() }
-            val activeRequestsDeferred = async { getActiveEmergencyRequestsUseCase() }
-            val pledgedRequestsDeferred = async { getMyPledgedRequestsUseCase() }
-
-            // Chờ và nhận kết quả
-            val profileResult = profileDeferred.await()
-            val activeRequestsResult = activeRequestsDeferred.await()
-            val pledgedRequestsResult = pledgedRequestsDeferred.await()
-
-            // Xử lý và cập nhật State
-            val userProfile = profileResult.getOrNull()
-            val activeRequests = activeRequestsResult.getOrNull() ?: emptyList()
-            val pledgedRequestIds = pledgedRequestsResult.getOrNull()?.map { it.id }?.toSet() ?: emptySet()
-
-            // Lọc ra danh sách yêu cầu cần hiển thị (chưa được chấp nhận bởi user này)
-            val displayableRequests = activeRequests.filter { it.id !in pledgedRequestIds }
-
-            val errorMessage = profileResult.exceptionOrNull()?.message
-                ?: activeRequestsResult.exceptionOrNull()?.message
-                ?: pledgedRequestsResult.exceptionOrNull()?.message
-
-            _state.update {
-                it.copy(
-                    isLoading = false,
-                    userName = userProfile?.fullName ?: "Khách",
-                    bloodType = userProfile?.bloodType ?: "N/A",
-                    nextDonationMessage = calculateNextDonationDateUseCase(userProfile),
-                    displayableEmergencyRequests = displayableRequests,
-                    error = errorMessage
-                )
             }
         }
     }

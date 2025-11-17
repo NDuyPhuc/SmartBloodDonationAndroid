@@ -8,7 +8,6 @@ import kotlin.Result
 class GetMyAppointmentsUseCase @Inject constructor(
     private val repository: MapBookingRepository
 ) {
-    suspend operator fun invoke(): Result<List<Appointment>> {
-        return repository.getMyAppointments()
-    }
+    operator fun invoke() = repository.getMyAppointments()
+
 }

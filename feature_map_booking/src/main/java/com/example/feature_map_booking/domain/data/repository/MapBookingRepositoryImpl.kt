@@ -1,12 +1,18 @@
 package com.example.feature_map_booking.domain.data.repository
 // feature_map_booking/src/main/java/com/smartblood/mapbooking/data/repository/MapBookingRepositoryImpl.kt
 
+import android.system.Os.close
 import com.smartblood.core.domain.model.Appointment
 import com.smartblood.core.domain.model.Hospital
 import com.smartblood.core.domain.model.TimeSlot
 import com.example.feature_map_booking.domain.repository.MapBookingRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.toObjects
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import java.util.*
 import javax.inject.Inject
@@ -102,19 +108,28 @@ class MapBookingRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getMyAppointments(): Result<List<Appointment>> {
-        val currentUser = auth.currentUser ?: return Result.failure(Exception("User not authenticated."))
-        return try {
-            val querySnapshot = firestore.collection("appointments")
-                .whereEqualTo("userId", currentUser.uid)
-                .orderBy("dateTime", com.google.firebase.firestore.Query.Direction.DESCENDING) // Sắp xếp mới nhất lên đầu
-                .get()
-                .await()
-
-            val appointments = querySnapshot.toObjects(Appointment::class.java)
-            Result.success(appointments)
-        } catch (e: Exception) {
-            Result.failure(e)
+    override fun getMyAppointments(): Flow<Result<List<Appointment>>> = callbackFlow {
+        val userId = auth.currentUser?.uid
+        if (userId == null) {
+            trySend(Result.failure(Exception("Người dùng chưa đăng nhập.")))
+            close()
+            return@callbackFlow
         }
+
+        val query = firestore.collection("appointments")
+            .whereEqualTo("userId", userId)
+            .orderBy("dateTime", Query.Direction.DESCENDING)
+
+        val listener = query.addSnapshotListener { snapshot, error ->
+            if (error != null) {
+                trySend(Result.failure(error))
+                return@addSnapshotListener
+            }
+            if (snapshot != null) {
+                val appointments = snapshot.toObjects<Appointment>() // Dùng hàm mở rộng
+                trySend(Result.success(appointments))
+            }
+        }
+        awaitClose { listener.remove() }
     }
 }

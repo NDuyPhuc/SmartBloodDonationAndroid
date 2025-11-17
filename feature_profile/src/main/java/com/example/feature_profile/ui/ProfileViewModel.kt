@@ -3,33 +3,31 @@ package com.example.feature_profile.ui
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.smartblood.core.domain.model.BloodRequest // Quan trọng: import BloodRequest
-import com.example.feature_emergency.domain.usecase.GetMyPledgedRequestsUseCase // Quan trọng: import UseCase
 import com.smartblood.core.domain.model.Appointment
+import com.smartblood.core.domain.model.BloodRequest
+import com.smartblood.core.domain.model.UserProfile
+import com.example.feature_emergency.domain.usecase.GetMyPledgedRequestsUseCase
 import com.example.feature_map_booking.domain.usecase.GetMyAppointmentsUseCase
 import com.example.feature_profile.domain.usecase.GetUserProfileUseCase
 import com.example.feature_profile.domain.usecase.UpdateUserProfileUseCase
 import com.smartblood.core.storage.domain.usecase.UploadImageUseCase
-import com.smartblood.core.domain.model.UserProfile
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.Calendar
+import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val getUserProfileUseCase: GetUserProfileUseCase,
     private val getMyAppointmentsUseCase: GetMyAppointmentsUseCase,
+    private val getMyPledgedRequestsUseCase: GetMyPledgedRequestsUseCase,
     private val updateUserProfileUseCase: UpdateUserProfileUseCase,
-    private val uploadImageUseCase: UploadImageUseCase,
-    private val getMyPledgedRequestsUseCase: GetMyPledgedRequestsUseCase // Đảm bảo đã inject
+    private val uploadImageUseCase: UploadImageUseCase
 ) : ViewModel() {
 
-    // Định nghĩa State một lần duy nhất
+    // Chỉ có MỘT data class State
     data class ProfileState(
         val isLoading: Boolean = true,
         val isUploading: Boolean = false,
@@ -41,49 +39,57 @@ class ProfileViewModel @Inject constructor(
         val error: String? = null
     )
 
+    // Chỉ có MỘT StateFlow
     private val _state = MutableStateFlow(ProfileState())
-    val state = _state.asStateFlow()
+    val state: StateFlow<ProfileState> = _state.asStateFlow()
 
+    // Chỉ có MỘT khối init
     init {
-        loadData()
+        listenToProfileData()
     }
 
-    fun loadData() {
+    private fun listenToProfileData() {
+        // Lấy thông tin user một lần khi khởi tạo
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
+            getUserProfileUseCase().onSuccess { user ->
+                _state.update { it.copy(userProfile = user) }
+            }.onFailure { error ->
+                _state.update { it.copy(isLoading = false, error = error.message) }
+            }
+        }
 
-            // Chạy song song 3 tác vụ để tối ưu tốc độ
-            val profileDeferred = async { getUserProfileUseCase() }
-            val appointmentsDeferred = async { getMyAppointmentsUseCase() }
-            val pledgedRequestsDeferred = async { getMyPledgedRequestsUseCase() }
+        // Lắng nghe real-time cả hai nguồn dữ liệu
+        viewModelScope.launch {
+            val appointmentsFlow = getMyAppointmentsUseCase()
+            val pledgedRequestsFlow = getMyPledgedRequestsUseCase()
 
-            // Chờ tất cả các tác vụ hoàn thành và lấy kết quả
-            val profileResult = profileDeferred.await()
-            val appointmentsResult = appointmentsDeferred.await()
-            val pledgedRequestsResult = pledgedRequestsDeferred.await()
+            // Kết hợp cả hai Flow
+            combine(appointmentsFlow, pledgedRequestsFlow) { appointmentsResult, pledgedResult ->
+                // Tạo một cặp để xử lý kết quả
+                Pair(appointmentsResult, pledgedResult)
+            }.collect { (appointmentsResult, pledgedResult) ->
 
-            // Xử lý kết quả và cập nhật State một lần duy nhất
-            val userProfile = profileResult.getOrNull()
-            val pledgedRequests = pledgedRequestsResult.getOrNull() ?: emptyList()
-            val (upcoming, today, past) = appointmentsResult.getOrNull()
-                ?.let { classifyAppointments(it) }
-                ?: Triple(emptyList(), emptyList(), emptyList())
+                // Xử lý lỗi
+                val errorMessage = appointmentsResult.exceptionOrNull()?.message
+                    ?: pledgedResult.exceptionOrNull()?.message
 
-            // Gom tất cả các lỗi có thể xảy ra
-            val errorMessage = profileResult.exceptionOrNull()?.message
-                ?: appointmentsResult.exceptionOrNull()?.message
-                ?: pledgedRequestsResult.exceptionOrNull()?.message
+                // Lấy dữ liệu thành công
+                val allAppointments = appointmentsResult.getOrNull() ?: emptyList()
+                val pledgedRequests = pledgedResult.getOrNull() ?: emptyList()
 
-            _state.update {
-                it.copy(
-                    isLoading = false,
-                    userProfile = userProfile,
-                    upcomingAppointments = upcoming,
-                    todayAppointments = today,
-                    pastAppointments = past,
-                    pledgedRequests = pledgedRequests,
-                    error = errorMessage
-                )
+                val (upcoming, today, past) = classifyAppointments(allAppointments)
+
+                _state.update {
+                    it.copy(
+                        isLoading = false, // Dữ liệu đã tải xong
+                        upcomingAppointments = upcoming,
+                        todayAppointments = today,
+                        pastAppointments = past,
+                        pledgedRequests = pledgedRequests,
+                        error = errorMessage
+                    )
+                }
             }
         }
     }

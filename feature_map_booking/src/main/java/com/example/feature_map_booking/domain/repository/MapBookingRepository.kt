@@ -5,6 +5,7 @@ package com.example.feature_map_booking.domain.repository
 import com.smartblood.core.domain.model.Appointment
 import com.smartblood.core.domain.model.Hospital
 import com.smartblood.core.domain.model.TimeSlot
+import kotlinx.coroutines.flow.Flow
 import java.util.Date
 import kotlin.Result
 
@@ -17,6 +18,6 @@ interface MapBookingRepository {
         dateTime: Date
     ): Result<Unit>
 
-    suspend fun getMyAppointments(): Result<List<Appointment>>
+    fun getMyAppointments(): Flow<Result<List<Appointment>>>
 
 }

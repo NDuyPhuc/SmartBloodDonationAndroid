@@ -6,5 +6,5 @@ import javax.inject.Inject
 class GetMyPledgedRequestsUseCase @Inject constructor(
     private val repository: EmergencyRepository
 ) {
-    suspend operator fun invoke() = repository.getMyPledgedRequests()
+    operator fun invoke() = repository.getMyPledgedRequests()
 }

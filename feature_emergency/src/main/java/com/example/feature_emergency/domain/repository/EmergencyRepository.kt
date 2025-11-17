@@ -2,6 +2,7 @@ package com.example.feature_emergency.domain.repository
 
 import com.smartblood.core.domain.model.BloodRequest
 import com.smartblood.core.domain.model.Donor
+import kotlinx.coroutines.flow.Flow
 import kotlin.Result
 
 interface EmergencyRepository {
@@ -10,8 +11,8 @@ interface EmergencyRepository {
     suspend fun getMyRequests(): Result<List<BloodRequest>>
 
     // **HÀM MỚI**: Lấy tất cả các yêu cầu khẩn cấp đang hoạt động
-    suspend fun getActiveEmergencyRequests(): Result<List<BloodRequest>>
+    fun getActiveEmergencyRequests(): Flow<Result<List<BloodRequest>>>
     suspend fun acceptEmergencyRequest(requestId: String, donorInfo: Donor): Result<Unit>
-    suspend fun getMyPledgedRequests(): Result<List<BloodRequest>>
+    fun getMyPledgedRequests(): Flow<Result<List<BloodRequest>>>
 
 }

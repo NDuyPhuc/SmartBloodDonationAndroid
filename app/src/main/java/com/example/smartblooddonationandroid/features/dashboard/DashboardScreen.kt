@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.smartblood.core.domain.model.BloodRequest
 import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -24,15 +25,16 @@ fun DashboardScreen(
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Xử lý hiển thị Snackbar
+    // Xử lý hiển thị thông báo thành công
     LaunchedEffect(state.pledgeSuccess) {
         if (state.pledgeSuccess) {
-            snackbarHostState.showSnackbar("Chấp nhận hiến máu thành công!")
+            snackbarHostState.showSnackbar("Chấp nhận hiến máu thành công! Kiểm tra trong Hồ sơ.")
+            // Báo cho ViewModel rằng thông báo đã được hiển thị để reset cờ
             viewModel.onEvent(DashboardEvent.OnPledgeSuccessMessageShown)
         }
     }
 
-    // Xử lý hiển thị lỗi
+    // Xử lý hiển thị các lỗi khác
     LaunchedEffect(state.error) {
         state.error?.let {
             snackbarHostState.showSnackbar("Lỗi: $it")
@@ -42,64 +44,91 @@ fun DashboardScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
+        // Kết hợp 2 trạng thái loading để hiển thị một chỉ báo tải duy nhất
+        val isLoading = state.isLoadingProfile || state.isLoadingRequests
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues) // Sử dụng padding từ Scaffold
-                .padding(16.dp), // Thêm padding riêng cho nội dung
+                .padding(paddingValues)
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (state.isLoading) {
+            if (isLoading && state.displayableEmergencyRequests.isEmpty()) {
+                // Chỉ hiển thị loading toàn màn hình khi khởi động lần đầu
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             } else {
                 // Thẻ thông tin cá nhân
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(16.dp)) {
-                        Text(
-                            text = "Chào mừng, ${state.userName}",
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        Text(text = "Nhóm máu: ${state.bloodType}")
-                        Text(
-                            text = state.nextDonationMessage,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                }
+                UserInfoCard(
+                    userName = state.userName,
+                    bloodType = state.bloodType,
+                    nextDonationMessage = state.nextDonationMessage,
+                    isLoading = state.isLoadingProfile
+                )
 
                 Text(
                     "Yêu cầu khẩn cấp gần đây:",
                     style = MaterialTheme.typography.titleMedium
                 )
 
-                if (state.displayableEmergencyRequests.isEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("Chưa có yêu cầu nào.")
-                    }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        items(state.displayableEmergencyRequests, key = { it.id }) { request ->
-                            EmergencyRequestCard(
-                                request = request,
-                                isPledging = state.isPledging,
-                                onAcceptClick = {
-                                    viewModel.onEvent(DashboardEvent.OnAcceptRequestClicked(request.id))
-                                }
-                            )
+                // Vùng hiển thị danh sách yêu cầu
+                Box(modifier = Modifier.weight(1f)) {
+                    if (state.isLoadingRequests && state.displayableEmergencyRequests.isEmpty()) {
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    } else if (state.displayableEmergencyRequests.isEmpty()) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("Chưa có yêu cầu nào.")
+                        }
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(state.displayableEmergencyRequests, key = { it.id }) { request ->
+                                EmergencyRequestCard(
+                                    request = request,
+                                    isPledging = state.isPledging,
+                                    onAcceptClick = {
+                                        viewModel.onEvent(DashboardEvent.OnAcceptRequestClicked(request.id))
+                                    }
+                                )
+                            }
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun UserInfoCard(
+    userName: String,
+    bloodType: String,
+    nextDonationMessage: String,
+    isLoading: Boolean
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        if (isLoading) {
+            Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(modifier = Modifier.size(32.dp))
+            }
+        } else {
+            Column(Modifier.padding(16.dp)) {
+                Text(
+                    text = "Chào mừng, $userName",
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(text = "Nhóm máu: $bloodType")
+                Text(
+                    text = nextDonationMessage,
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
         }
     }
