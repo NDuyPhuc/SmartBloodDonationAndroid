@@ -1,5 +1,5 @@
 //D:\SmartBloodDonationAndroid\feature_auth\src\main\java\com\example\feature_auth\ui\navigation\AuthScreen.kt
-package com.smartblood.auth.navigation
+package com.example.feature_auth.ui.navigation
 
 
 // Định nghĩa các route cụ thể bên trong luồng xác thực

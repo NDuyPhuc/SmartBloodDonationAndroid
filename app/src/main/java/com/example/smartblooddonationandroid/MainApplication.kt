@@ -1,4 +1,4 @@
-package com.smartblood.donation
+package com.example.smartblooddonationandroid
 
 import android.app.Application
 import android.util.Log

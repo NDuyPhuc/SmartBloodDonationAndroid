@@ -1,11 +1,11 @@
 //app/src/main/java/com/smartblood/donation/navigation/AppNavHost.kt
-package com.smartblood.donation.navigation
+package com.example.smartblooddonationandroid.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.smartblood.auth.navigation.authGraph
+import com.example.feature_auth.ui.navigation.authGraph
 import com.example.feature_auth.ui.splash.SplashScreen
 import com.smartblood.donation.ui.MainScreen
 

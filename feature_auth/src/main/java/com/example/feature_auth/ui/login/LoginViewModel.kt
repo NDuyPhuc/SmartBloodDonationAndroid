@@ -1,10 +1,10 @@
 // feature_auth/src/main/java/com/smartblood/auth/ui/login/LoginViewModel.kt
 
-package com.smartblood.auth.ui.login
+package com.example.feature_auth.ui.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.smartblood.auth.domain.usecase.LoginUseCase
+import com.example.feature_auth.domain.usecase.LoginUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

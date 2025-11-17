@@ -1,6 +1,6 @@
 // feature_auth/src/main/java/com/smartblood/auth/ui/register/RegisterScreen.kt
 
-package com.smartblood.auth.ui.register
+package com.example.feature_auth.ui.register
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*

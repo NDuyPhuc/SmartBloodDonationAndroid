@@ -1,6 +1,6 @@
 // feature_auth/src/main/java/com/smartblood/auth/ui/login/LoginContract.kt
 
-package com.smartblood.auth.ui.login
+package com.example.feature_auth.ui.login
 
 // Định nghĩa trạng thái của màn hình
 data class LoginState(
