@@ -37,7 +37,6 @@ import com.smartblood.donation.navigation.Screen
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun MainScreen() {
-    // SỬA TỪ rememberNavController() THÀNH rememberAnimatedNavController()
     val navController = rememberAnimatedNavController()
 
     val navItems = listOf(
@@ -89,10 +88,8 @@ fun AppNavigation(
         modifier = Modifier.padding(paddingValues) // Và sử dụng nó ở đây
     ) {
         composable(route = BottomNavItem.Dashboard.route) {
-            DashboardScreen(
-                onFindDonationCenters = { navController.navigate(BottomNavItem.Map.route) },
-                onViewEmergencyRequests = { /* TODO */ }
-            )
+            DashboardScreen()
+
         }
 
         composable(route = BottomNavItem.Map.route) {
@@ -142,5 +139,6 @@ fun AppNavigation(
         composable(Screen.DONATION_HISTORY) {
             DonationHistoryScreen(onNavigateBack = { navController.popBackStack() })
         }
+
     }
 }
