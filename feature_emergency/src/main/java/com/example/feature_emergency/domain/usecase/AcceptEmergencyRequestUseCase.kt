@@ -1,8 +1,8 @@
 package com.example.feature_emergency.domain.usecase
 
-import com.example.feature_emergency.domain.model.Donor
+import com.smartblood.core.domain.model.Donor
 import com.example.feature_emergency.domain.repository.EmergencyRepository
-import com.smartblood.profile.domain.model.UserProfile // Import từ feature_profile
+import com.smartblood.core.domain.model.UserProfile // Import từ feature_profile
 
 import javax.inject.Inject
 

@@ -1,9 +1,9 @@
 package com.example.feature_map_booking.domain.data.repository
 // feature_map_booking/src/main/java/com/smartblood/mapbooking/data/repository/MapBookingRepositoryImpl.kt
 
-import com.example.feature_map_booking.domain.model.Appointment
-import com.example.feature_map_booking.domain.model.Hospital
-import com.example.feature_map_booking.domain.model.TimeSlot
+import com.smartblood.core.domain.model.Appointment
+import com.smartblood.core.domain.model.Hospital
+import com.smartblood.core.domain.model.TimeSlot
 import com.example.feature_map_booking.domain.repository.MapBookingRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore

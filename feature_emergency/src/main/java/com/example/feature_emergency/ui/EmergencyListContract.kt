@@ -1,6 +1,6 @@
 package com.example.feature_emergency.ui
 
-import com.example.feature_emergency.domain.model.BloodRequest
+import com.smartblood.core.domain.model.BloodRequest
 
 data class EmergencyListState(
     val isLoading: Boolean = true,

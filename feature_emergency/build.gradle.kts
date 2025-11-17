@@ -39,8 +39,17 @@ dependencies {
     implementation(project(":core"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.firebase.firestore)
-    implementation(project(":feature_profile"))
     implementation(libs.firebase.auth)
+    // Remote - Firebase
+    // BoM để quản lý phiên bản các thư viện Firebase
+    implementation(platform(libs.firebase.bom))
+    // Thư viện cần thiết cho xác thực (lấy currentUser)
+    implementation(libs.firebase.auth.ktx)
+    // Thư viện cần thiết cho Firestore (hàm .toObject, .id, .collection, ...)
+    implementation(libs.firebase.firestore.ktx)
+
+    // Cần thiết cho các hàm coroutine của Firebase như .await()
+    implementation(libs.kotlinx.coroutines.play.services)
     // Dòng hilt-android không cần thiết vì đã có trong core, nhưng để cũng không sao
     // implementation(libs.hilt.android)
 

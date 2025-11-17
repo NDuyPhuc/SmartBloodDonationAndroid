@@ -1,5 +1,5 @@
 // feature_map_booking/src/main/java/com/smartblood/mapbooking/domain/model/Hospital.kt
-package com.example.feature_map_booking.domain.model
+package com.smartblood.core.domain.model
 
 import com.google.firebase.firestore.GeoPoint
 

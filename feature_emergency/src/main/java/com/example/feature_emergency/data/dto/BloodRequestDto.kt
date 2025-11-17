@@ -1,7 +1,7 @@
 package com.example.feature_emergency.data.dto
 
 
-import com.example.feature_emergency.domain.model.BloodRequest
+import com.smartblood.core.domain.model.BloodRequest
 import com.google.firebase.Timestamp
 
 // Lớp DTO này khớp với cấu trúc trên Firestore

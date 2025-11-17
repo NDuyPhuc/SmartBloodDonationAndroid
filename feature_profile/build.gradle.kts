@@ -40,6 +40,8 @@ android {
 
 dependencies {
     implementation(project(":core"))
+    implementation(platform(libs.androidx.compose.bom))
+
     implementation(libs.androidx.core.ktx)
 
     // THÊM VÀO: Jetpack Compose cho UI
@@ -47,6 +49,8 @@ dependencies {
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(project(":feature_map_booking"))
+    implementation(project(":feature_emergency"))
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     // THÊM VÀO: Hilt - Dependency Injection
@@ -72,7 +76,6 @@ dependencies {
     // THÊM VÀO: Testing cho Compose
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-    implementation(project(":feature_map_booking"))
 
     implementation(libs.trackasia.sdk)
     implementation(libs.trackasia.annotation.plugin)

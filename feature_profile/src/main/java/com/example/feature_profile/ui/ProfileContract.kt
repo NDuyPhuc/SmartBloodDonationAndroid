@@ -1,8 +1,8 @@
 //D:\SmartBloodDonationAndroid\feature_profile\src\main\java\com\example\feature_profile\ui\ProfileContract.kt
 package com.smartblood.profile.ui
 
-import com.example.feature_map_booking.domain.model.Appointment
-import com.smartblood.profile.domain.model.UserProfile
+import com.smartblood.core.domain.model.Appointment
+import com.smartblood.core.domain.model.UserProfile
 
 // Định nghĩa MỚI và DUY NHẤT cho ProfileState
 data class ProfileState(

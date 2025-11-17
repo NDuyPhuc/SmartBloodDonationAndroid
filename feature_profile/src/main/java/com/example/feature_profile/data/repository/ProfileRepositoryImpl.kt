@@ -4,7 +4,7 @@ package com.smartblood.profile.data.repository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.smartblood.profile.domain.model.DonationRecord
-import com.smartblood.profile.domain.model.UserProfile
+import com.smartblood.core.domain.model.UserProfile
 import com.smartblood.profile.domain.repository.ProfileRepository
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject

@@ -1,4 +1,4 @@
-package com.example.feature_map_booking.domain.model
+package com.smartblood.core.domain.model
 
 // feature_map_booking/src/main/java/com/smartblood/mapbooking/domain/model/Appointment.kt
 

@@ -9,7 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.feature_profile.domain.usecase.GetUserProfileUseCase
 import com.example.feature_profile.domain.usecase.UpdateUserProfileUseCase
 import com.smartblood.core.storage.domain.usecase.UploadImageUseCase
-import com.smartblood.profile.domain.model.UserProfile
+import com.smartblood.core.domain.model.UserProfile
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

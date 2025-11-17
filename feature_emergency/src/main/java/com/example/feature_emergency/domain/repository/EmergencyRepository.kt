@@ -1,7 +1,7 @@
 package com.example.feature_emergency.domain.repository
 
-import com.example.feature_emergency.domain.model.BloodRequest
-import com.example.feature_emergency.domain.model.Donor
+import com.smartblood.core.domain.model.BloodRequest
+import com.smartblood.core.domain.model.Donor
 import kotlin.Result
 
 interface EmergencyRepository {
@@ -12,4 +12,6 @@ interface EmergencyRepository {
     // **HÀM MỚI**: Lấy tất cả các yêu cầu khẩn cấp đang hoạt động
     suspend fun getActiveEmergencyRequests(): Result<List<BloodRequest>>
     suspend fun acceptEmergencyRequest(requestId: String, donorInfo: Donor): Result<Unit>
+    suspend fun getMyPledgedRequests(): Result<List<BloodRequest>>
+
 }

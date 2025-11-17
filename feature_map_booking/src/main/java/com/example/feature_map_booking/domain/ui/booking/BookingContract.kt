@@ -2,7 +2,7 @@ package com.example.feature_map_booking.domain.ui.booking
 
 // feature_map_booking/src/main/java/com/smartblood/mapbooking/ui/booking/BookingContract.kt
 
-import com.example.feature_map_booking.domain.model.TimeSlot
+import com.smartblood.core.domain.model.TimeSlot
 import java.util.Date
 
 data class BookingState(

@@ -1,16 +1,18 @@
 package com.example.feature_profile.ui
 
 import android.net.Uri
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.feature_map_booking.domain.model.Appointment
+import com.smartblood.core.domain.model.BloodRequest // Quan trọng: import BloodRequest
+import com.example.feature_emergency.domain.usecase.GetMyPledgedRequestsUseCase // Quan trọng: import UseCase
+import com.smartblood.core.domain.model.Appointment
 import com.example.feature_map_booking.domain.usecase.GetMyAppointmentsUseCase
 import com.example.feature_profile.domain.usecase.GetUserProfileUseCase
 import com.example.feature_profile.domain.usecase.UpdateUserProfileUseCase
 import com.smartblood.core.storage.domain.usecase.UploadImageUseCase
-import com.smartblood.profile.domain.model.UserProfile
+import com.smartblood.core.domain.model.UserProfile
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -23,10 +25,11 @@ class ProfileViewModel @Inject constructor(
     private val getUserProfileUseCase: GetUserProfileUseCase,
     private val getMyAppointmentsUseCase: GetMyAppointmentsUseCase,
     private val updateUserProfileUseCase: UpdateUserProfileUseCase,
-    private val uploadImageUseCase: UploadImageUseCase
+    private val uploadImageUseCase: UploadImageUseCase,
+    private val getMyPledgedRequestsUseCase: GetMyPledgedRequestsUseCase // Đảm bảo đã inject
 ) : ViewModel() {
 
-    // <<-- QUAN TRỌNG: Định nghĩa ProfileState ngay tại đây
+    // Định nghĩa State một lần duy nhất
     data class ProfileState(
         val isLoading: Boolean = true,
         val isUploading: Boolean = false,
@@ -34,6 +37,7 @@ class ProfileViewModel @Inject constructor(
         val upcomingAppointments: List<Appointment> = emptyList(),
         val todayAppointments: List<Appointment> = emptyList(),
         val pastAppointments: List<Appointment> = emptyList(),
+        val pledgedRequests: List<BloodRequest> = emptyList(),
         val error: String? = null
     )
 
@@ -48,38 +52,38 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
 
-            val profileResult = getUserProfileUseCase()
-            val appointmentsResult = getMyAppointmentsUseCase()
+            // Chạy song song 3 tác vụ để tối ưu tốc độ
+            val profileDeferred = async { getUserProfileUseCase() }
+            val appointmentsDeferred = async { getMyAppointmentsUseCase() }
+            val pledgedRequestsDeferred = async { getMyPledgedRequestsUseCase() }
 
-            var userProfile: UserProfile? = null
-            var profileErrorMessage: String? = null
+            // Chờ tất cả các tác vụ hoàn thành và lấy kết quả
+            val profileResult = profileDeferred.await()
+            val appointmentsResult = appointmentsDeferred.await()
+            val pledgedRequestsResult = pledgedRequestsDeferred.await()
 
-            profileResult.onSuccess { profile ->
-                userProfile = profile
-            }.onFailure { error ->
-                profileErrorMessage = error.message
-            }
+            // Xử lý kết quả và cập nhật State một lần duy nhất
+            val userProfile = profileResult.getOrNull()
+            val pledgedRequests = pledgedRequestsResult.getOrNull() ?: emptyList()
+            val (upcoming, today, past) = appointmentsResult.getOrNull()
+                ?.let { classifyAppointments(it) }
+                ?: Triple(emptyList(), emptyList(), emptyList())
 
-            appointmentsResult.onSuccess { allAppointments ->
-                val (upcoming, today, past) = classifyAppointments(allAppointments)
-                _state.update {
-                    it.copy(
-                        isLoading = false,
-                        userProfile = userProfile, // <<-- Cập nhật userProfile vào state
-                        upcomingAppointments = upcoming,
-                        todayAppointments = today,
-                        pastAppointments = past,
-                        error = profileErrorMessage
-                    )
-                }
-            }.onFailure { error ->
-                _state.update {
-                    it.copy(
-                        isLoading = false,
-                        userProfile = userProfile,
-                        error = profileErrorMessage ?: error.message
-                    )
-                }
+            // Gom tất cả các lỗi có thể xảy ra
+            val errorMessage = profileResult.exceptionOrNull()?.message
+                ?: appointmentsResult.exceptionOrNull()?.message
+                ?: pledgedRequestsResult.exceptionOrNull()?.message
+
+            _state.update {
+                it.copy(
+                    isLoading = false,
+                    userProfile = userProfile,
+                    upcomingAppointments = upcoming,
+                    todayAppointments = today,
+                    pastAppointments = past,
+                    pledgedRequests = pledgedRequests,
+                    error = errorMessage
+                )
             }
         }
     }

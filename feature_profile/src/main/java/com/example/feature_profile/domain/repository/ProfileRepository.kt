@@ -2,7 +2,7 @@
 package com.smartblood.profile.domain.repository
 
 import com.smartblood.profile.domain.model.DonationRecord
-import com.smartblood.profile.domain.model.UserProfile
+import com.smartblood.core.domain.model.UserProfile
 import kotlin.Result
 
 interface ProfileRepository {

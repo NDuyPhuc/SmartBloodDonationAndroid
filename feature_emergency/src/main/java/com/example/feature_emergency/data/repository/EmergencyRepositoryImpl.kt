@@ -3,12 +3,16 @@ package com.example.feature_emergency.data.repository
 
 import com.example.feature_emergency.data.dto.BloodRequestDto
 import com.example.feature_emergency.data.dto.toDomain
-import com.example.feature_emergency.domain.model.BloodRequest
-import com.example.feature_emergency.domain.model.Donor
+import com.smartblood.core.domain.model.BloodRequest
+import com.smartblood.core.domain.model.Donor
 import com.example.feature_emergency.domain.repository.EmergencyRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.toObject
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import kotlin.Result
@@ -23,6 +27,42 @@ class EmergencyRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val auth: FirebaseAuth
 ) : EmergencyRepository {
+
+    override suspend fun getMyPledgedRequests(): Result<List<BloodRequest>> {
+        return try {
+            val userId = auth.currentUser?.uid
+                ?: return Result.failure(Exception("Người dùng chưa đăng nhập."))
+
+            val donorDocsSnapshot = firestore.collectionGroup("donors")
+                .whereEqualTo("userId", userId)
+                .get()
+                .await()
+
+            if (donorDocsSnapshot.isEmpty) {
+                return Result.success(emptyList())
+            }
+
+            // Sử dụng coroutineScope để chạy song song các lệnh gọi mạng
+            val bloodRequests = coroutineScope {
+                val deferreds = donorDocsSnapshot.documents.map { donorDoc ->
+                    async {
+                        // Lấy document cha (blood_request)
+                        val requestDoc = donorDoc.reference.parent.parent?.get()?.await()
+                        requestDoc?.let { doc ->
+                            // Chuyển đổi sang DTO rồi sang Domain Model
+                            doc.toObject<BloodRequestDto>()?.toDomain(id = doc.id)
+                        }
+                    }
+                }
+                // Chờ tất cả hoàn thành và lọc ra các kết quả không null
+                deferreds.awaitAll().filterNotNull()
+            }
+
+            Result.success(bloodRequests)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 
     override suspend fun acceptEmergencyRequest(requestId: String, donorInfo: Donor): Result<Unit> {
         return try {

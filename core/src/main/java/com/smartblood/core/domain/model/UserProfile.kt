@@ -1,7 +1,7 @@
-//D:\SmartBloodDonationAndroid\feature_profile\src\main\java\com\example\feature_profile\domain\model\UserProfile.kt
-package com.smartblood.profile.domain.model
+package com.smartblood.core.domain.model
 
 import java.util.Date
+
 data class UserProfile(
     val uid: String = "",
     val email: String = "",

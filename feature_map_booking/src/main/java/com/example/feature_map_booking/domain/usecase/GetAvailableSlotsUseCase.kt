@@ -2,7 +2,7 @@ package com.example.feature_map_booking.domain.usecase
 
 // feature_map_booking/src/main/java/com/smartblood/mapbooking/domain/usecase/GetAvailableSlotsUseCase.kt
 
-import com.example.feature_map_booking.domain.model.TimeSlot
+import com.smartblood.core.domain.model.TimeSlot
 import com.example.feature_map_booking.domain.repository.MapBookingRepository
 import java.util.Date
 import javax.inject.Inject

@@ -1,6 +1,6 @@
 package com.smartblood.profile.domain.usecase
 
-import com.smartblood.profile.domain.model.UserProfile
+import com.smartblood.core.domain.model.UserProfile
 import java.util.Calendar
 import java.util.Date
 import java.util.concurrent.TimeUnit

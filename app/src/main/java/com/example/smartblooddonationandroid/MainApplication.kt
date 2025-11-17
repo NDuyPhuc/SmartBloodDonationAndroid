@@ -2,48 +2,10 @@ package com.smartblood.donation
 
 import android.app.Application
 import android.util.Log
-import android.net.Uri // <-- Thêm Uri
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.cloudinary.android.MediaManager
 import com.trackasia.android.TrackAsia // <-- Thêm TrackAsia
-import dagger.hilt.android.AndroidEntryPoint
 import java.io.InputStream
 import java.util.Properties
-import java.util.Date // <-- Thêm Date
-import java.util.Locale // <-- Thêm Locale
-import java.text.SimpleDateFormat // <-- Thêm SimpleDateFormat
-import androidx.compose.foundation.lazy.grid.GridCells // <-- Thêm GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid // <-- Thêm LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items // <-- Thêm items
-import androidx.compose.foundation.shape.CircleShape // <-- Thêm CircleShape
-import androidx.compose.material.icons.Icons // <-- Thêm Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack // <-- Thêm ArrowBack
-import androidx.compose.material.icons.filled.Phone // <-- Thêm Phone
-import androidx.compose.ui.graphics.vector.ImageVector // <-- Thêm ImageVector
-import androidx.compose.ui.text.font.FontWeight // <-- Thêm FontWeight
-import androidx.compose.ui.unit.sp // <-- Thêm sp
-import androidx.compose.ui.viewinterop.AndroidView // <-- Thêm AndroidView
-import androidx.lifecycle.Lifecycle // <-- Thêm Lifecycle
-import androidx.lifecycle.LifecycleEventObserver // <-- Thêm LifecycleEventObserver
-import com.example.feature_map_booking.domain.model.Hospital // <-- Thêm Hospital
-import com.google.gson.JsonParser // <-- Thêm JsonParser
-import com.trackasia.android.camera.CameraUpdateFactory // <-- Thêm CameraUpdateFactory
-import com.trackasia.android.geometry.LatLng // <-- Thêm LatLng
-import com.trackasia.android.location.LocationComponent // <-- Thêm LocationComponent
-import com.trackasia.android.location.LocationComponentActivationOptions // <-- Thêm LocationComponentActivationOptions
-import com.trackasia.android.location.modes.CameraMode // <-- Thêm CameraMode
-import com.trackasia.android.location.modes.RenderMode // <-- Thêm RenderMode
-import com.trackasia.android.maps.MapView // <-- Thêm MapView
-import com.trackasia.android.maps.Style // <-- Thêm Style
-import com.trackasia.android.plugins.annotation.SymbolManager // <-- Thêm SymbolManager
-import com.trackasia.android.plugins.annotation.SymbolOptions // <-- Thêm SymbolOptions
 import dagger.hilt.android.HiltAndroidApp
 
 @HiltAndroidApp

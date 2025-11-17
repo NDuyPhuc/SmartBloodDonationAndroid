@@ -5,7 +5,7 @@ package com.example.feature_map_booking.domain.ui.location_detail
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.feature_map_booking.domain.model.Hospital
+import com.smartblood.core.domain.model.Hospital
 import com.example.feature_map_booking.domain.usecase.GetHospitalDetailsUseCase
 import com.google.firebase.firestore.GeoPoint
 import dagger.hilt.android.lifecycle.HiltViewModel

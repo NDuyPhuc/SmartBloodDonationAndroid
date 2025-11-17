@@ -34,7 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import com.example.feature_map_booking.domain.model.Hospital
+import com.smartblood.core.domain.model.Hospital
 import com.google.android.gms.location.LocationServices
 import com.google.gson.JsonParser
 import com.trackasia.android.camera.CameraUpdateFactory

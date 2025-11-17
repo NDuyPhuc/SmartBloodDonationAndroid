@@ -3,7 +3,7 @@ package com.example.feature_map_booking.domain.ui.map
 // feature_map_booking/src/main/java/com/smartblood/mapbooking/ui/map/MapContract.kt
 
 import com.trackasia.android.geometry.LatLng
-import com.example.feature_map_booking.domain.model.Hospital
+import com.smartblood.core.domain.model.Hospital
 
 data class MapState(
     val isLoading: Boolean = true,

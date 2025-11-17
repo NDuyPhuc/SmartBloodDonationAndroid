@@ -1,6 +1,6 @@
 package com.example.feature_map_booking.domain.usecase
 
-import com.example.feature_map_booking.domain.model.Appointment
+import com.smartblood.core.domain.model.Appointment
 import com.example.feature_map_booking.domain.repository.MapBookingRepository
 import javax.inject.Inject
 import kotlin.Result

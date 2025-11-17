@@ -1,4 +1,4 @@
-import com.example.feature_map_booking.domain.model.Hospital
+import com.smartblood.core.domain.model.Hospital
 import com.google.firebase.firestore.GeoPoint
 
 // Đây là nguồn dữ liệu duy nhất cho toàn bộ ứng dụng ở giai đoạn này

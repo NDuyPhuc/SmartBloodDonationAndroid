@@ -1,4 +1,4 @@
-package com.example.feature_emergency.domain.model
+package com.smartblood.core.domain.model
 
 import java.util.Date
 

@@ -5,7 +5,7 @@ package com.example.feature_map_booking.domain.ui.map
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.GeoPoint
-import com.example.feature_map_booking.domain.model.Hospital
+import com.smartblood.core.domain.model.Hospital
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
