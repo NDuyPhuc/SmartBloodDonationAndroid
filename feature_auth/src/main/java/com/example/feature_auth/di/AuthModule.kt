@@ -2,8 +2,8 @@
 
 package com.smartblood.auth.di
 
-import com.smartblood.auth.data.repository.AuthRepositoryImpl
-import com.smartblood.auth.domain.repository.AuthRepository
+import com.example.feature_auth.data.repository.AuthRepositoryImpl
+import com.example.feature_auth.domain.repository.AuthRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

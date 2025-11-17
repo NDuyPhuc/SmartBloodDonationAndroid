@@ -1,5 +1,5 @@
 //D:\SmartBloodDonationAndroid\app\src\main\java\com\example\smartblooddonationandroid\navigation\BottomNavItem.kt
-package com.smartblood.donation.navigation
+package com.example.smartblooddonationandroid.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home

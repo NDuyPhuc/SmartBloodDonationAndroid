@@ -1,11 +1,11 @@
 // feature_auth/src/main/java/com/smartblood/auth/data/repository/AuthRepositoryImpl.kt
 
-package com.smartblood.auth.data.repository
+package com.example.feature_auth.data.repository
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.smartblood.auth.domain.model.User
-import com.smartblood.auth.domain.repository.AuthRepository
+import com.example.feature_auth.domain.model.User
+import com.example.feature_auth.domain.repository.AuthRepository
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import kotlin.Result

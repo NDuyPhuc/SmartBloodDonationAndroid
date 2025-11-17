@@ -1,9 +1,8 @@
-package com.smartblood.donation.features.dashboard
+package com.example.smartblooddonationandroid.features.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.smartblood.core.domain.model.BloodRequest
-import com.smartblood.core.domain.model.UserProfile
 import com.example.feature_emergency.domain.usecase.AcceptEmergencyRequestUseCase
 import com.example.feature_emergency.domain.usecase.GetActiveEmergencyRequestsUseCase
 import com.example.feature_emergency.domain.usecase.GetMyPledgedRequestsUseCase

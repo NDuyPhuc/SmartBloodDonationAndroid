@@ -1,9 +1,9 @@
 // feature_auth/src/main/java/com/smartblood/auth/domain/repository/AuthRepository.kt
 
-package com.smartblood.auth.domain.repository
+package com.example.feature_auth.domain.repository
 
 // Sử dụng Result của Kotlin để đóng gói thành công hoặc lỗi một cách an toàn
-import com.smartblood.auth.domain.model.User
+import com.example.feature_auth.domain.model.User
 import kotlin.Result
 
 interface AuthRepository {

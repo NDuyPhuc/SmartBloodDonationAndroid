@@ -28,9 +28,9 @@ import com.example.feature_profile.ui.EditProfileScreen
 import com.example.feature_profile.ui.ProfileScreen
 
 // Sửa các import cũ (nếu có) để trỏ đến các package đúng
-import com.smartblood.donation.features.dashboard.DashboardScreen
-import com.smartblood.donation.navigation.BottomNavItem
-import com.smartblood.donation.navigation.Screen
+import com.example.smartblooddonationandroid.features.dashboard.DashboardScreen
+import com.example.smartblooddonationandroid.navigation.BottomNavItem
+import com.example.smartblooddonationandroid.navigation.Screen
 
 
 // THÊM ANNOTATION NÀY

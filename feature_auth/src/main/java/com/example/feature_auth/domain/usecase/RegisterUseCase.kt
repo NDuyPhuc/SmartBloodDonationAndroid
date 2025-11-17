@@ -1,8 +1,8 @@
 // feature_auth/src/main/java/com/smartblood/auth/domain/usecase/RegisterUseCase.kt
 
-package com.smartblood.auth.domain.usecase
+package com.example.feature_auth.domain.usecase
 
-import com.smartblood.auth.domain.repository.AuthRepository
+import com.example.feature_auth.domain.repository.AuthRepository
 import javax.inject.Inject
 
 class RegisterUseCase @Inject constructor(

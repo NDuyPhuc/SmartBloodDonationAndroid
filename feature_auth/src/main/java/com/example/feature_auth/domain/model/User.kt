@@ -1,6 +1,6 @@
 // feature_auth/src/main/java/com/smartblood/auth/domain/model/User.kt
 
-package com.smartblood.auth.domain.model
+package com.example.feature_auth.domain.model
 
 data class User(
     val uid: String = "",

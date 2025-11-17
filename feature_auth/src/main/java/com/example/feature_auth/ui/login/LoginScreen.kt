@@ -1,6 +1,6 @@
 // feature_auth/src/main/java/com/smartblood/auth/ui/login/LoginScreen.kt
 
-package com.smartblood.auth.ui.login
+package com.example.feature_auth.ui.login
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*

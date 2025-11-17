@@ -1,6 +1,6 @@
 // feature_auth/src/main/java/com/smartblood/auth/ui/register/RegisterContract.kt
 
-package com.smartblood.auth.ui.register
+package com.example.feature_auth.ui.register
 
 // Định nghĩa trạng thái của màn hình
 data class RegisterState(

@@ -4,7 +4,7 @@ package com.example.feature_auth.ui.splash
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.smartblood.auth.domain.usecase.CheckUserAuthenticationUseCase
+import com.example.feature_auth.domain.usecase.CheckUserAuthenticationUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -1,7 +1,7 @@
 //app/src/main/java/com/smartblood/donation/navigation/Screen.kt
-package com.smartblood.donation.navigation
+package com.example.smartblooddonationandroid.navigation
 
-import com.smartblood.auth.navigation.AUTH_GRAPH_ROUTE
+import com.example.feature_auth.ui.navigation.AUTH_GRAPH_ROUTE
 
 // Định nghĩa các "địa chỉ" cho các màn hình
 object Screen {
