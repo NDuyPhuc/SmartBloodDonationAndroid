@@ -8,6 +8,8 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.example.feature_auth.ui.navigation.authGraph
+import com.example.feature_auth.ui.splash.SplashScreen
 import com.example.feature_map_booking.domain.ui.booking.BookingScreen
 import com.example.feature_map_booking.domain.ui.location_detail.LocationDetailScreen
 import com.example.feature_map_booking.domain.ui.map.MapScreen
@@ -15,8 +17,6 @@ import com.example.feature_profile.ui.DonationHistoryScreen
 import com.example.feature_profile.ui.EditProfileScreen
 import com.example.feature_profile.ui.ProfileScreen
 import com.example.smartblooddonationandroid.features.dashboard.DashboardScreen
-// --- QUAN TRỌNG: Import hàm authGraph từ module feature_auth ---
-import com.example.feature_auth.ui.navigation.authGraph
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 
@@ -28,16 +28,46 @@ fun AppNavHost(
 ) {
     AnimatedNavHost(
         navController = navController,
-        startDestination = BottomNavItem.Dashboard.route,
+        startDestination = Screen.SPLASH, // Bắt đầu từ Splash
         modifier = Modifier.padding(paddingValues)
     ) {
-        // --- QUAN TRỌNG: Đăng ký luồng Auth vào đây ---
-        authGraph(navController)
-        // ----------------------------------------------
+        // 1. Đăng ký luồng Authentication
+        authGraph(
+            navController = navController,
+            onLoginSuccess = {
+                // Khi đăng nhập thành công, AppNavHost sẽ điều hướng đến Dashboard
+                navController.navigate(BottomNavItem.Dashboard.route) {
+                    // Xóa sạch lịch sử màn hình Login/Splash để không back lại được
+                    popUpTo(0) {
+                        inclusive = true
+                    }
+                    launchSingleTop = true
+                }
+            }
+        )
 
+        // 2. Màn hình Splash
+        composable(Screen.SPLASH) {
+            SplashScreen(
+                navigateToLogin = {
+                    navController.navigate(Graph.AUTHENTICATION) {
+                        popUpTo(Screen.SPLASH) { inclusive = true }
+                    }
+                },
+                navigateToDashboard = {
+                    navController.navigate(BottomNavItem.Dashboard.route) {
+                        popUpTo(Screen.SPLASH) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // 3. Màn hình Dashboard
         composable(route = BottomNavItem.Dashboard.route) {
             DashboardScreen()
         }
+
+        // 4. Luồng Bản đồ & Đặt lịch
         composable(route = BottomNavItem.Map.route) {
             MapScreen(
                 onNavigateToLocationDetail = { hospitalId ->
@@ -69,17 +99,21 @@ fun AppNavHost(
             )
         }
 
+        // 5. Luồng Hồ sơ (Profile)
         composable(BottomNavItem.Profile.route) {
             ProfileScreen(
-                onNavigateToEditProfile = { navController.navigate(Screen.EDIT_PROFILE) },
-                onNavigateToDonationHistory = { navController.navigate(Screen.DONATION_HISTORY) },
+                // Tham số 1: Chuyển trang Edit Profile
+                onNavigateToEditProfile = {
+                    navController.navigate(Screen.EDIT_PROFILE)
+                },
+                // Tham số 2: Chuyển trang Lịch sử
+                onNavigateToDonationHistory = {
+                    navController.navigate(Screen.DONATION_HISTORY)
+                },
+                // Tham số 3: Đăng xuất -> Về trang Login
                 onNavigateToLogin = {
-                    // Điều hướng về luồng Authentication
                     navController.navigate(Graph.AUTHENTICATION) {
-                        // Xóa sạch back stack để không thể quay lại
-                        popUpTo(Graph.MAIN) {
-                            inclusive = true
-                        }
+                        popUpTo(Graph.MAIN) { inclusive = true }
                         launchSingleTop = true
                     }
                 }
@@ -89,6 +123,7 @@ fun AppNavHost(
         composable(Screen.EDIT_PROFILE) {
             EditProfileScreen(onNavigateBack = { navController.popBackStack() })
         }
+
         composable(Screen.DONATION_HISTORY) {
             DonationHistoryScreen(onNavigateBack = { navController.popBackStack() })
         }

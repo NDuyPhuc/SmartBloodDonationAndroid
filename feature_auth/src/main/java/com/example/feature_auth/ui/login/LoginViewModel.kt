@@ -1,5 +1,3 @@
-// feature_auth/src/main/java/com/smartblood/auth/ui/login/LoginViewModel.kt
-
 package com.example.feature_auth.ui.login
 
 import androidx.lifecycle.ViewModel
@@ -16,7 +14,6 @@ import javax.inject.Inject
 class LoginViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase
 ) : ViewModel() {
-
     private val _state = MutableStateFlow(LoginState())
     val state = _state.asStateFlow()
 
@@ -39,16 +36,22 @@ class LoginViewModel @Inject constructor(
 
     private fun login() {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
+            _state.update { it.copy(isLoading = true, error = null) }
             val result = loginUseCase(state.value.email, state.value.password)
-            result.onSuccess { user ->
+            result.onSuccess {
                 _state.update { it.copy(isLoading = false, loginSuccess = true) }
             }.onFailure { exception ->
+                // --- SỬA: Dịch lỗi sang tiếng Việt ---
+                val errorMessage = when {
+                    exception.message?.contains("badly formatted") == true -> "Định dạng email không hợp lệ."
+                    exception.message?.contains("user-not-found") == true || exception.message?.contains("There is no user") == true -> "Tài khoản không tồn tại."
+                    exception.message?.contains("wrong-password") == true || exception.message?.contains("INVALID_LOGIN_CREDENTIALS") == true -> "Sai mật khẩu hoặc email."
+                    exception.message?.contains("network error") == true -> "Lỗi kết nối mạng. Vui lòng kiểm tra lại."
+                    else -> "Đăng nhập thất bại: ${exception.message}"
+                }
+                // ------------------------------------
                 _state.update {
-                    it.copy(
-                        isLoading = false,
-                        error = exception.message ?: "Đã xảy ra lỗi không xác định."
-                    )
+                    it.copy(isLoading = false, error = errorMessage)
                 }
             }
         }
