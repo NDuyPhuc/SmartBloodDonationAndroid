@@ -1,11 +1,10 @@
-//D:\SmartBloodDonationAndroid\feature_profile\src\main\java\com\example\feature_profile\data\repository\ProfileRepositoryImpl.kt
-package com.smartblood.profile.data.repository
+package com.example.feature_profile.data.repository
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.smartblood.profile.domain.model.DonationRecord
 import com.smartblood.core.domain.model.UserProfile
-import com.smartblood.profile.domain.repository.ProfileRepository
+import com.example.feature_profile.domain.repository.ProfileRepository
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import kotlin.Result
@@ -44,11 +43,14 @@ class ProfileRepositoryImpl @Inject constructor(
                 .collection("donation_history")
                 .orderBy("date", com.google.firebase.firestore.Query.Direction.DESCENDING)
                 .get().await()
-
             val history = querySnapshot.toObjects(DonationRecord::class.java)
             Result.success(history)
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    override fun signOut() {
+        auth.signOut()
     }
 }

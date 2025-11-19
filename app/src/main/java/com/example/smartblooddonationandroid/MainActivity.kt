@@ -1,4 +1,3 @@
-//D:\SmartBloodDonationAndroid\app\src\main\java\com\example\smartblooddonationandroid\MainActivity.kt
 package com.example.smartblooddonationandroid
 
 import android.os.Bundle
@@ -7,12 +6,9 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import com.example.smartblooddonationandroid.ui.theme.MainScreen
 import com.example.smartblooddonationandroid.ui.theme.SmartBloodDonationAndroidTheme
-import com.example.smartblooddonationandroid.navigation.AppNavHost
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -26,25 +22,10 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    AppNavHost()
+                    // FIX: Gọi MainScreen để hiển thị giao diện chính (bao gồm BottomBar)
+                    MainScreen()
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    SmartBloodDonationAndroidTheme {
-        Greeting("Android")
     }
 }

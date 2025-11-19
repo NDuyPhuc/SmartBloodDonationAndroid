@@ -3,8 +3,10 @@ package com.example.feature_profile.domain.usecase
 import com.example.feature_profile.domain.repository.ProfileRepository
 import javax.inject.Inject
 
-class GetUserProfileUseCase @Inject constructor(
+class SignOutUseCase @Inject constructor(
     private val repository: ProfileRepository
 ) {
-    suspend operator fun invoke() = repository.getUserProfile()
+    operator fun invoke() {
+        repository.signOut()
+    }
 }
