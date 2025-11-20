@@ -1,8 +1,7 @@
-//D:\SmartBloodDonationAndroid\feature_profile\src\main\java\com\example\feature_profile\di\ProfileModule.kt
-package com.smartblood.profile.di
+package com.example.feature_profile.di
 
-import com.smartblood.profile.data.repository.ProfileRepositoryImpl
-import com.smartblood.profile.domain.repository.ProfileRepository
+import com.example.feature_profile.data.repository.ProfileRepositoryImpl
+import com.example.feature_profile.domain.repository.ProfileRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

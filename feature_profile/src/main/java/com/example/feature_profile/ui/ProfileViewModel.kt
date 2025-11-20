@@ -10,7 +10,9 @@ import com.example.feature_emergency.domain.usecase.GetMyPledgedRequestsUseCase
 import com.example.feature_map_booking.domain.usecase.GetMyAppointmentsUseCase
 import com.example.feature_profile.domain.usecase.GetUserProfileUseCase
 import com.example.feature_profile.domain.usecase.UpdateUserProfileUseCase
+import com.example.feature_profile.domain.usecase.SignOutUseCase
 import com.smartblood.core.storage.domain.usecase.UploadImageUseCase
+// ĐÃ XÓA CÁC IMPORT com.smartblood.profile.ui... VÌ GIỜ CÙNG PACKAGE
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -24,32 +26,33 @@ class ProfileViewModel @Inject constructor(
     private val getMyAppointmentsUseCase: GetMyAppointmentsUseCase,
     private val getMyPledgedRequestsUseCase: GetMyPledgedRequestsUseCase,
     private val updateUserProfileUseCase: UpdateUserProfileUseCase,
-    private val uploadImageUseCase: UploadImageUseCase
+    private val uploadImageUseCase: UploadImageUseCase,
+    private val signOutUseCase: SignOutUseCase
 ) : ViewModel() {
 
-    // Chỉ có MỘT data class State
-    data class ProfileState(
-        val isLoading: Boolean = true,
-        val isUploading: Boolean = false,
-        val userProfile: UserProfile? = null,
-        val upcomingAppointments: List<Appointment> = emptyList(),
-        val todayAppointments: List<Appointment> = emptyList(),
-        val pastAppointments: List<Appointment> = emptyList(),
-        val pledgedRequests: List<BloodRequest> = emptyList(),
-        val error: String? = null
-    )
-
-    // Chỉ có MỘT StateFlow
     private val _state = MutableStateFlow(ProfileState())
     val state: StateFlow<ProfileState> = _state.asStateFlow()
 
-    // Chỉ có MỘT khối init
     init {
         listenToProfileData()
     }
 
+    fun onEvent(event: ProfileEvent) {
+        when (event) {
+            ProfileEvent.OnSignOutClicked -> signOut()
+            is ProfileEvent.OnEditProfileClicked -> { /* Xử lý ở UI */ }
+            is ProfileEvent.OnViewDonationHistoryClicked -> { /* Xử lý ở UI */ }
+        }
+    }
+
+    private fun signOut() {
+        viewModelScope.launch {
+            signOutUseCase()
+            _state.update { it.copy(isSignedOut = true) }
+        }
+    }
+
     private fun listenToProfileData() {
-        // Lấy thông tin user một lần khi khởi tạo
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
             getUserProfileUseCase().onSuccess { user ->
@@ -59,30 +62,23 @@ class ProfileViewModel @Inject constructor(
             }
         }
 
-        // Lắng nghe real-time cả hai nguồn dữ liệu
         viewModelScope.launch {
             val appointmentsFlow = getMyAppointmentsUseCase()
             val pledgedRequestsFlow = getMyPledgedRequestsUseCase()
 
-            // Kết hợp cả hai Flow
             combine(appointmentsFlow, pledgedRequestsFlow) { appointmentsResult, pledgedResult ->
-                // Tạo một cặp để xử lý kết quả
                 Pair(appointmentsResult, pledgedResult)
             }.collect { (appointmentsResult, pledgedResult) ->
-
-                // Xử lý lỗi
                 val errorMessage = appointmentsResult.exceptionOrNull()?.message
                     ?: pledgedResult.exceptionOrNull()?.message
 
-                // Lấy dữ liệu thành công
                 val allAppointments = appointmentsResult.getOrNull() ?: emptyList()
                 val pledgedRequests = pledgedResult.getOrNull() ?: emptyList()
-
                 val (upcoming, today, past) = classifyAppointments(allAppointments)
 
                 _state.update {
                     it.copy(
-                        isLoading = false, // Dữ liệu đã tải xong
+                        isLoading = false,
                         upcomingAppointments = upcoming,
                         todayAppointments = today,
                         pastAppointments = past,
@@ -123,7 +119,6 @@ class ProfileViewModel @Inject constructor(
         val startOfToday = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
         }.time
-
         val endOfToday = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59); set(Calendar.SECOND, 59); set(Calendar.MILLISECOND, 999)
         }.time
@@ -135,11 +130,9 @@ class ProfileViewModel @Inject constructor(
                 else -> today.add(appointment)
             }
         }
-
         upcoming.sortBy { it.dateTime }
         today.sortBy { it.dateTime }
         past.sortByDescending { it.dateTime }
-
         return Triple(upcoming, today, past)
     }
 }

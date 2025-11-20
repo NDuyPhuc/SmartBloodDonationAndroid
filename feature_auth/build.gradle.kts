@@ -43,6 +43,8 @@ dependencies {
     // Core Android KTX
     implementation(libs.androidx.core.ktx)
 
+    implementation("androidx.compose.material:material-icons-extended:1.6.1")
+
     // Jetpack Compose
     implementation(platform(libs.androidx.compose.bom)) // BoM quản lý phiên bản
     implementation(libs.androidx.compose.ui)

@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -19,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -27,16 +29,23 @@ import com.smartblood.core.domain.model.Appointment
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import kotlin.collections.isNotEmpty
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel(),
     onNavigateToEditProfile: () -> Unit,
-    onNavigateToDonationHistory: () -> Unit
+    onNavigateToDonationHistory: () -> Unit,
+    onNavigateToLogin: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
+
+    // Lắng nghe sự kiện đăng xuất thành công
+    LaunchedEffect(state.isSignedOut) {
+        if (state.isSignedOut) {
+            onNavigateToLogin()
+        }
+    }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -48,15 +57,64 @@ fun ProfileScreen(
         topBar = { TopAppBar(title = { Text("Hồ sơ của tôi") }) }
     ) { paddingValues ->
         if (state.isLoading) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+            // Trạng thái đang tải
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
         } else if (state.error != null) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("Lỗi: ${state.error}", color = MaterialTheme.colorScheme.error) }
+            // --- TRẠNG THÁI LỖI / CHƯA ĐĂNG NHẬP (ĐÃ SỬA) ---
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Bạn chưa đăng nhập",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Vui lòng đăng nhập để xem hồ sơ, lịch sử hiến máu và các lịch hẹn của bạn.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
+                    color = Color.Gray
+                )
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Nút chuyển về màn hình Đăng nhập
+                Button(
+                    onClick = onNavigateToLogin,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
+                ) {
+                    Text("Đăng nhập ngay")
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Hiển thị chi tiết lỗi nhỏ ở dưới (để debug)
+                Text(
+                    text = "Chi tiết lỗi hệ thống: ${state.error}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
+                    textAlign = TextAlign.Center
+                )
+            }
+            // ------------------------------------------------
         } else {
+            // Trạng thái hiển thị dữ liệu (Đã đăng nhập)
             LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(paddingValues),
                 contentPadding = PaddingValues(16.dp),
             ) {
-                // --- PHẦN THÔNG TIN USER VÀ TẢI ẢNH ---
+                // 1. THÔNG TIN USER VÀ TẢI ẢNH
                 item {
                     state.userProfile?.let { profile ->
                         Column(
@@ -95,9 +153,9 @@ fun ProfileScreen(
                     }
                 }
 
-                item { Divider(modifier = Modifier.padding(vertical = 16.dp)) }
+                item { HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp)) }
 
-                // --- PHẦN YÊU CẦU ĐÃ CHẤP NHẬN ---
+                // 2. YÊU CẦU ĐÃ CHẤP NHẬN
                 if (state.pledgedRequests.isNotEmpty()) {
                     item { SectionTitle("Yêu cầu đã chấp nhận") }
                     items(state.pledgedRequests) { request ->
@@ -106,13 +164,14 @@ fun ProfileScreen(
                             detailLine1 = "Cần nhóm máu: ${request.bloodType}",
                             detailLine2 = "Ngày yêu cầu: ${formatDate(request.createdAt)}",
                             status = "ĐÃ CHẤP NHẬN",
-                            statusColor = Color(0xFF1976D2) // Màu xanh dương cho trạng thái này
+                            statusColor = Color(0xFF1976D2)
                         )
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
-                    item { Divider(modifier = Modifier.padding(vertical = 16.dp)) }
+                    item { HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp)) }
                 }
 
-                // --- PHẦN LỊCH HẸN ---
+                // 3. LỊCH HẸN
                 if (state.todayAppointments.isEmpty() && state.upcomingAppointments.isEmpty() && state.pastAppointments.isEmpty()) {
                     item { Text("Bạn chưa có lịch hẹn nào.", modifier = Modifier.padding(top = 16.dp)) }
                 } else {
@@ -120,27 +179,47 @@ fun ProfileScreen(
                         item { SectionTitle("Lịch hẹn hôm nay") }
                         items(state.todayAppointments) { appointment ->
                             AppointmentCard(appointment = appointment, isPast = false)
+                            Spacer(modifier = Modifier.height(8.dp))
                         }
                     }
                     if (state.upcomingAppointments.isNotEmpty()) {
                         item { SectionTitle("Lịch hẹn sắp tới") }
                         items(state.upcomingAppointments) { appointment ->
                             AppointmentCard(appointment = appointment, isPast = false)
+                            Spacer(modifier = Modifier.height(8.dp))
                         }
                     }
                     if (state.pastAppointments.isNotEmpty()) {
                         item { SectionTitle("Lịch hẹn đã qua") }
                         items(state.pastAppointments) { appointment ->
                             AppointmentCard(appointment = appointment, isPast = true)
+                            Spacer(modifier = Modifier.height(8.dp))
                         }
                     }
+                }
+
+                // NÚT ĐĂNG XUẤT (Khi đã đăng nhập)
+                item {
+                    HorizontalDivider(modifier = Modifier.padding(vertical = 24.dp))
+                    Button(
+                        onClick = { viewModel.onEvent(ProfileEvent.OnSignOutClicked) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.error,
+                            contentColor = MaterialTheme.colorScheme.onError
+                        )
+                    ) {
+                        Text("Đăng xuất", fontWeight = FontWeight.Bold)
+                    }
+                    Spacer(modifier = Modifier.height(32.dp))
                 }
             }
         }
     }
 }
 
-// Composable để hiển thị tiêu đề cho mỗi section
 @Composable
 fun SectionTitle(title: String) {
     Text(
@@ -151,9 +230,6 @@ fun SectionTitle(title: String) {
     )
 }
 
-// === HỢP NHẤT THÀNH MỘT COMPOSABLE DUY NHẤT ===
-
-// 1. Composable chuyên dụng cho Lịch hẹn (nhận đối tượng Appointment)
 @Composable
 fun AppointmentCard(appointment: Appointment, isPast: Boolean = false) {
     GenericInfoCard(
@@ -166,7 +242,6 @@ fun AppointmentCard(appointment: Appointment, isPast: Boolean = false) {
     )
 }
 
-// 2. Composable chung để hiển thị thông tin dạng thẻ (linh hoạt hơn)
 @Composable
 fun GenericInfoCard(
     title: String,
@@ -192,8 +267,6 @@ fun GenericInfoCard(
         }
     }
 }
-
-// === TẠO CÁC HÀM TIỆN ÍCH ĐỂ ĐỊNH DẠNG NGÀY THÁNG ===
 
 @Composable
 private fun formatDateTime(date: Date): String {

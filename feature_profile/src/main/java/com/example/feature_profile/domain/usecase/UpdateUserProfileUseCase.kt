@@ -2,7 +2,7 @@
 package com.example.feature_profile.domain.usecase
 
 import com.smartblood.core.domain.model.UserProfile
-import com.smartblood.profile.domain.repository.ProfileRepository
+import com.example.feature_profile.domain.repository.ProfileRepository
 import javax.inject.Inject
 
 class UpdateUserProfileUseCase @Inject constructor(
