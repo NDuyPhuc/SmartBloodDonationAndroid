@@ -49,6 +49,11 @@ dependencies {
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui.tooling.preview)
+
+    // --- QUAN TRỌNG: Thêm thư viện này để sửa lỗi thiếu icon History, PhotoCamera ---
+    implementation("androidx.compose.material:material-icons-extended:1.6.1")
+    // ------------------------------------------------------------------------------
+
     implementation(project(":feature_map_booking"))
     implementation(project(":feature_emergency"))
     debugImplementation(libs.androidx.compose.ui.tooling)
