@@ -3,21 +3,18 @@ package com.example.feature_profile.ui
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.smartblood.core.domain.model.Appointment
-import com.smartblood.core.domain.model.BloodRequest
-import com.smartblood.core.domain.model.UserProfile
 import com.example.feature_emergency.domain.usecase.GetMyPledgedRequestsUseCase
 import com.example.feature_map_booking.domain.usecase.GetMyAppointmentsUseCase
 import com.example.feature_profile.domain.usecase.GetUserProfileUseCase
 import com.example.feature_profile.domain.usecase.UpdateUserProfileUseCase
 import com.example.feature_profile.domain.usecase.SignOutUseCase
+import com.smartblood.core.domain.model.Appointment
+import com.smartblood.core.domain.model.BloodRequest
 import com.smartblood.core.storage.domain.usecase.UploadImageUseCase
-// ĐÃ XÓA CÁC IMPORT com.smartblood.profile.ui... VÌ GIỜ CÙNG PACKAGE
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.Calendar
-import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
@@ -74,6 +71,7 @@ class ProfileViewModel @Inject constructor(
 
                 val allAppointments = appointmentsResult.getOrNull() ?: emptyList()
                 val pledgedRequests = pledgedResult.getOrNull() ?: emptyList()
+
                 val (upcoming, today, past) = classifyAppointments(allAppointments)
 
                 _state.update {
@@ -90,23 +88,39 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    // --- SỬA CHÍNH Ở ĐÂY ---
     fun onAvatarChange(uri: Uri) {
         viewModelScope.launch {
             _state.update { it.copy(isUploading = true, error = null) }
+
             val currentProfile = _state.value.userProfile ?: run {
                 _state.update { it.copy(isUploading = false, error = "Không tìm thấy thông tin người dùng.") }
                 return@launch
             }
 
-            uploadImageUseCase(uri, "avatars/${currentProfile.uid}").onSuccess { downloadUrl ->
-                val updatedProfile = currentProfile.copy(avatarUrl = downloadUrl)
+            // Kiểm tra xem URI là file trong máy hay là link web (http/https)
+            val isWebLink = uri.scheme?.startsWith("http") == true
+
+            if (isWebLink) {
+                // TRƯỜNG HỢP 1: Chọn Avatar có sẵn (Link web) -> Cập nhật trực tiếp, KHÔNG upload
+                val updatedProfile = currentProfile.copy(avatarUrl = uri.toString())
                 updateUserProfileUseCase(updatedProfile).onSuccess {
                     _state.update { it.copy(isUploading = false, userProfile = updatedProfile) }
                 }.onFailure { error ->
-                    _state.update { it.copy(isUploading = false, error = "Lỗi cập nhật profile: ${error.message}") }
+                    _state.update { it.copy(isUploading = false, error = "Lỗi cập nhật avatar: ${error.message}") }
                 }
-            }.onFailure { error ->
-                _state.update { it.copy(isUploading = false, error = "Lỗi tải ảnh lên: ${error.message}") }
+            } else {
+                // TRƯỜNG HỢP 2: Chọn ảnh từ thư viện (File máy) -> Upload lên Cloudinary rồi mới cập nhật
+                uploadImageUseCase(uri, "avatars/${currentProfile.uid}").onSuccess { downloadUrl ->
+                    val updatedProfile = currentProfile.copy(avatarUrl = downloadUrl)
+                    updateUserProfileUseCase(updatedProfile).onSuccess {
+                        _state.update { it.copy(isUploading = false, userProfile = updatedProfile) }
+                    }.onFailure { error ->
+                        _state.update { it.copy(isUploading = false, error = "Lỗi cập nhật profile: ${error.message}") }
+                    }
+                }.onFailure { error ->
+                    _state.update { it.copy(isUploading = false, error = "Lỗi tải ảnh lên: ${error.message}") }
+                }
             }
         }
     }
@@ -133,6 +147,7 @@ class ProfileViewModel @Inject constructor(
         upcoming.sortBy { it.dateTime }
         today.sortBy { it.dateTime }
         past.sortByDescending { it.dateTime }
+
         return Triple(upcoming, today, past)
     }
 }
