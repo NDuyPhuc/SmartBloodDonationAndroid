@@ -1,7 +1,5 @@
 package com.example.feature_map_booking.domain.usecase
 
-// feature_map_booking/src/main/java/com/smartblood/mapbooking/domain/usecase/GetNearbyHospitalsUseCase.kt
-
 import com.smartblood.core.domain.model.Hospital
 import com.example.feature_map_booking.domain.repository.MapBookingRepository
 import javax.inject.Inject
