@@ -1,5 +1,3 @@
-
-
 plugins {
     alias(libs.plugins.android.secrets.gradle.plugin)
     alias(libs.plugins.android.application)
@@ -66,6 +64,9 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+
+    implementation("androidx.compose.material:material-icons-extended:1.6.1")
+    // ---------------------------------------------------------------------------------------
 
     // Hilt
     implementation(libs.hilt.android)
