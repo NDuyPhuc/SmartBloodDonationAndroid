@@ -1,15 +1,14 @@
 package com.example.feature_map_booking.domain.data.repository
 // feature_map_booking/src/main/java/com/smartblood/mapbooking/data/repository/MapBookingRepositoryImpl.kt
 
-import android.system.Os.close
-import com.smartblood.core.domain.model.Appointment
-import com.smartblood.core.domain.model.Hospital
-import com.smartblood.core.domain.model.TimeSlot
+import com.example.feature_map_booking.domain.data.dto.HospitalDto
+import com.example.feature_map_booking.domain.data.mapper.toDomain
 import com.example.feature_map_booking.domain.repository.MapBookingRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
-import com.google.firebase.firestore.toObjects
+import com.smartblood.core.domain.model.Appointment
+import com.smartblood.core.domain.model.Hospital
+import com.smartblood.core.domain.model.TimeSlot
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -23,22 +22,53 @@ class MapBookingRepositoryImpl @Inject constructor(
     private val auth: FirebaseAuth
 ) : MapBookingRepository {
 
+    // --- CẬP NHẬT: Lấy danh sách bệnh viện thật từ Firestore ---
     override suspend fun getNearbyHospitals(lat: Double, lng: Double, radiusKm: Double): Result<List<Hospital>> {
-        // Hiện tại đang dùng dữ liệu giả từ FakeHospitalDataSource
-        return Result.success(FakeHospitalDataSource.hospitals)
-    }
+        return try {
+            // Lấy các bệnh viện có status là "Đã duyệt" (theo như trong ảnh console)
+            val snapshot = firestore.collection("hospitals")
+                .whereEqualTo("status", "Đã duyệt")
+                .get()
+                .await()
 
-    override suspend fun getHospitalDetails(hospitalId: String): Result<Hospital> {
-        // Hiện tại đang dùng dữ liệu giả từ FakeHospitalDataSource
-        val hospital = FakeHospitalDataSource.hospitals.find { it.id == hospitalId }
-        return if (hospital != null) {
-            Result.success(hospital)
-        } else {
-            Result.failure(Exception("Hospital not found."))
+            val hospitals = snapshot.documents.mapNotNull { doc ->
+                // Convert document sang DTO rồi sang Domain Model
+                doc.toObject(HospitalDto::class.java)?.toDomain(doc.id)
+            }
+
+            // TODO: (Nâng cao) Có thể lọc theo khoảng cách radiusKm ở đây nếu muốn
+            // Hiện tại trả về toàn bộ danh sách đã duyệt
+            Result.success(hospitals)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 
+    // --- CẬP NHẬT: Lấy chi tiết bệnh viện thật ---
+    override suspend fun getHospitalDetails(hospitalId: String): Result<Hospital> {
+        return try {
+            val document = firestore.collection("hospitals")
+                .document(hospitalId)
+                .get()
+                .await()
+
+            val hospitalDto = document.toObject(HospitalDto::class.java)
+
+            if (hospitalDto != null) {
+                Result.success(hospitalDto.toDomain(document.id))
+            } else {
+                Result.failure(Exception("Hospital not found"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // ... Giữ nguyên các hàm getAvailableSlots, bookAppointment, getMyAppointments ...
+    // (Các hàm này đã viết đúng logic Firestore ở file cũ của bạn, không cần sửa)
+
     override suspend fun getAvailableSlots(hospitalId: String, date: Date): Result<List<TimeSlot>> {
+        // Logic cũ của bạn ok
         return try {
             val calendar = Calendar.getInstance().apply { time = date }
             calendar.set(Calendar.HOUR_OF_DAY, 0); calendar.set(Calendar.MINUTE, 0); calendar.set(Calendar.SECOND, 0)
@@ -59,8 +89,8 @@ class MapBookingRepositoryImpl @Inject constructor(
             }
 
             val allSlots = mutableListOf<TimeSlot>()
-            val START_HOUR = 8
-            val END_HOUR = 17
+            val START_HOUR = 7 // Cập nhật theo giờ làm việc thực tế
+            val END_HOUR = 16
 
             for (hour in START_HOUR until END_HOUR) {
                 val timeString = String.format("%02d:00", hour)
@@ -73,25 +103,19 @@ class MapBookingRepositoryImpl @Inject constructor(
         }
     }
 
-    // --- PHIÊN BẢN ĐÃ SỬA LỖI HOÀN CHỈNH ---
     override suspend fun bookAppointment(hospitalId: String, dateTime: Date): Result<Unit> {
         val currentUser = auth.currentUser ?: return Result.failure(Exception("User not authenticated."))
 
-        // Bước 1: Gọi hàm lấy chi tiết bệnh viện
+        // ... (Giữ nguyên các đoạn code lấy thông tin bệnh viện ở trên) ...
         val hospitalResult = getHospitalDetails(hospitalId)
-
-        // Bước 2: Kiểm tra kết quả của hospitalResult
         if (hospitalResult.isFailure) {
-            // Nếu không tìm thấy bệnh viện, trả về lỗi ngay lập tức
             return Result.failure(hospitalResult.exceptionOrNull() ?: Exception("Unknown error finding hospital."))
         }
-
-        // Nếu tới được đây, nghĩa là hospitalResult.isSuccess là true
         val hospital = hospitalResult.getOrNull() ?: return Result.failure(Exception("Hospital data is null."))
 
-        // Bước 3: Tiếp tục logic tạo và lưu lịch hẹn
         return try {
             val appointmentId = firestore.collection("appointments").document().id
+
             val appointment = Appointment(
                 id = appointmentId,
                 userId = currentUser.uid,
@@ -99,12 +123,16 @@ class MapBookingRepositoryImpl @Inject constructor(
                 hospitalName = hospital.name,
                 hospitalAddress = hospital.address,
                 dateTime = dateTime,
-                status = "CONFIRMED"
+
+                // --- SỬA Ở ĐÂY: Đổi từ "CONFIRMED" thành "PENDING" ---
+                status = "PENDING"
+                // "PENDING" nghĩa là Chờ duyệt. Admin trên web sẽ bấm duyệt để chuyển thành "CONFIRMED"
             )
+
             firestore.collection("appointments").document(appointmentId).set(appointment).await()
-            Result.success(Unit) // Trả về thành công
+            Result.success(Unit)
         } catch (e: Exception) {
-            Result.failure(e) // Trả về thất bại nếu có lỗi khi lưu vào Firestore
+            Result.failure(e)
         }
     }
 
@@ -115,10 +143,9 @@ class MapBookingRepositoryImpl @Inject constructor(
             close()
             return@callbackFlow
         }
-
         val query = firestore.collection("appointments")
             .whereEqualTo("userId", userId)
-            .orderBy("dateTime", Query.Direction.DESCENDING)
+            .orderBy("dateTime", com.google.firebase.firestore.Query.Direction.DESCENDING)
 
         val listener = query.addSnapshotListener { snapshot, error ->
             if (error != null) {
@@ -126,7 +153,7 @@ class MapBookingRepositoryImpl @Inject constructor(
                 return@addSnapshotListener
             }
             if (snapshot != null) {
-                val appointments = snapshot.toObjects<Appointment>() // Dùng hàm mở rộng
+                val appointments = snapshot.toObjects(Appointment::class.java)
                 trySend(Result.success(appointments))
             }
         }

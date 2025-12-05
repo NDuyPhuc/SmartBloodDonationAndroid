@@ -1,4 +1,4 @@
-package com.example.smartblooddonationandroid.features.dashboard
+package com.smartblood.donation.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

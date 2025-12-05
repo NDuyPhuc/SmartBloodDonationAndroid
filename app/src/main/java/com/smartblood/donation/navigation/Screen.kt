@@ -1,5 +1,5 @@
 //app/src/main/java/com/smartblood/donation/navigation/Screen.kt
-package com.example.smartblooddonationandroid.navigation
+package com.smartblood.donation.navigation
 
 import com.example.feature_auth.ui.navigation.AUTH_GRAPH_ROUTE
 

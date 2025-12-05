@@ -6,6 +6,8 @@ import java.util.Date
 data class DonationRecord(
     val id: String = "",
     val hospitalName: String = "",
+    val hospitalAddress: String = "", // Thêm địa chỉ cho chi tiết
     val date: Date = Date(),
-    val unitsDonated: Int = 1
+    val status: String = "",
+    val certificateUrl: String? = null // <--- QUAN TRỌNG: Link chứng nhận từ Web
 )

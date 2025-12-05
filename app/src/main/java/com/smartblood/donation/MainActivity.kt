@@ -1,4 +1,4 @@
-package com.example.smartblooddonationandroid
+package com.smartblood.donation
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -7,8 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.example.smartblooddonationandroid.ui.theme.MainScreen
-import com.example.smartblooddonationandroid.ui.theme.SmartBloodDonationAndroidTheme
+import com.smartblood.donation.theme.MainScreen
+import com.smartblood.donation.theme.SmartBloodDonationAndroidTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

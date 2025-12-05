@@ -1,5 +1,6 @@
 package com.example.feature_emergency.domain.repository
 
+import com.example.feature_emergency.domain.model.EmergencyDonationRecord
 import com.smartblood.core.domain.model.BloodRequest
 import com.smartblood.core.domain.model.Donor
 import kotlinx.coroutines.flow.Flow
@@ -15,4 +16,5 @@ interface EmergencyRepository {
     suspend fun acceptEmergencyRequest(requestId: String, donorInfo: Donor): Result<Unit>
     fun getMyPledgedRequests(): Flow<Result<List<BloodRequest>>>
 
+    suspend fun getEmergencyDonationHistory(): Result<List<EmergencyDonationRecord>>
 }

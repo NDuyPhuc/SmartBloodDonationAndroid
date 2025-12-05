@@ -1,4 +1,4 @@
-package com.example.smartblooddonationandroid
+package com.example.smartblood
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

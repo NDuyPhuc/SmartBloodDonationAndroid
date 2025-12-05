@@ -1,4 +1,4 @@
-package com.example.smartblooddonationandroid.ui.theme
+package com.smartblood.donation.theme
 
 import androidx.compose.ui.graphics.Color
 

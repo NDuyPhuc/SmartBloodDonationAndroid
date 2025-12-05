@@ -1,4 +1,4 @@
-package com.example.smartblooddonationandroid.navigation
+package com.smartblood.donation.navigation
 
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.PaddingValues
@@ -16,7 +16,7 @@ import com.example.feature_map_booking.domain.ui.map.MapScreen
 import com.example.feature_profile.ui.DonationHistoryScreen
 import com.example.feature_profile.ui.EditProfileScreen
 import com.example.feature_profile.ui.ProfileScreen
-import com.example.smartblooddonationandroid.features.dashboard.DashboardScreen
+import com.smartblood.donation.dashboard.DashboardScreen
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 

@@ -3,6 +3,7 @@ package com.example.feature_emergency.data.repository
 
 import com.example.feature_emergency.data.dto.BloodRequestDto
 import com.example.feature_emergency.data.dto.toDomain
+import com.example.feature_emergency.domain.model.EmergencyDonationRecord
 import com.smartblood.core.domain.model.BloodRequest
 import com.smartblood.core.domain.model.Donor
 import com.example.feature_emergency.domain.repository.EmergencyRepository
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.util.Date
 import javax.inject.Inject
 import kotlin.Result
 
@@ -72,6 +74,55 @@ class EmergencyRepositoryImpl @Inject constructor(
             }
         }
         awaitClose { listenerRegistration.remove() }
+    }
+
+    override suspend fun getEmergencyDonationHistory(): Result<List<EmergencyDonationRecord>> {
+        return try {
+            val userId = auth.currentUser?.uid
+                ?: return Result.failure(Exception("Người dùng chưa đăng nhập."))
+
+            // 1. Dùng Collection Group để lấy tất cả docs trong các sub-collection 'donors'
+            // mà có userId trùng với user hiện tại.
+            val querySnapshot = firestore.collectionGroup("donors")
+                .whereEqualTo("userId", userId)
+                .get()
+                .await()
+
+            // 2. Xử lý bất đồng bộ để fetch thông tin Hospital từ Parent Document
+            val historyList = coroutineScope {
+                querySnapshot.documents.map { donorDoc ->
+                    async {
+                        // Lấy reference đến document cha (blood_requests/{requestId})
+                        val parentRef = donorDoc.reference.parent.parent
+
+                        var hospitalName = "Không xác định"
+
+                        if (parentRef != null) {
+                            val parentSnap = parentRef.get().await()
+                            hospitalName = parentSnap.getString("hospitalName") ?: "Không xác định"
+                        }
+
+                        // Map dữ liệu
+                        EmergencyDonationRecord(
+                            id = donorDoc.id,
+                            requestId = parentRef?.id ?: "",
+                            hospitalName = hospitalName,
+                            pledgedAt = donorDoc.getDate("pledgedAt") ?: Date(),
+                            status = donorDoc.getString("status") ?: "Pending",
+                            userBloodType = donorDoc.getString("userBloodType") ?: "",
+                            certificateUrl = donorDoc.getString("certificateUrl"),
+                            rating = donorDoc.getLong("rating")?.toInt() ?: 0,
+                            review = donorDoc.getString("review")
+                        )
+                    }
+                }.awaitAll() // Chờ tất cả các request cha hoàn thành
+            }
+
+            // Sắp xếp theo ngày mới nhất
+            Result.success(historyList.sortedByDescending { it.pledgedAt })
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     override suspend fun acceptEmergencyRequest(requestId: String, donorInfo: Donor): Result<Unit> {

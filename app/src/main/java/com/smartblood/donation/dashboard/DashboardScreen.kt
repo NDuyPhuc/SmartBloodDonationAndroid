@@ -1,4 +1,4 @@
-package com.example.smartblooddonationandroid.features.dashboard
+package com.smartblood.donation.dashboard
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

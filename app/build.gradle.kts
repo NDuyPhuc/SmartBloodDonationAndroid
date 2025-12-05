@@ -11,7 +11,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.smartblooddonationandroid"
+    namespace = "com.example.smartblood"
     compileSdk = 34
 
     defaultConfig {

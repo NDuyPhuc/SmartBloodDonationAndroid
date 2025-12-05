@@ -1,4 +1,4 @@
-package com.example.smartblooddonationandroid
+package com.example.smartblood
 
 import org.junit.Test
 

@@ -1,15 +1,14 @@
-package com.example.smartblooddonationandroid.ui.theme
+package com.smartblood.donation.theme
 
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.example.smartblooddonationandroid.navigation.AppNavHost
-import com.example.smartblooddonationandroid.navigation.BottomNavItem
+import com.smartblood.donation.navigation.AppNavHost
+import com.smartblood.donation.navigation.BottomNavItem
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 
 @OptIn(ExperimentalAnimationApi::class)

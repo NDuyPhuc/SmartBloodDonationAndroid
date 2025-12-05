@@ -6,6 +6,7 @@ import com.smartblood.profile.domain.model.DonationRecord
 import com.smartblood.core.domain.model.UserProfile
 import com.example.feature_profile.domain.repository.ProfileRepository
 import kotlinx.coroutines.tasks.await
+import java.util.Date
 import javax.inject.Inject
 import kotlin.Result
 
@@ -38,14 +39,32 @@ class ProfileRepositoryImpl @Inject constructor(
 
     override suspend fun getDonationHistory(): Result<List<DonationRecord>> {
         return try {
-            val userId = auth.currentUser?.uid ?: return Result.failure(Exception("User not logged in"))
-            val querySnapshot = firestore.collection("users").document(userId)
-                .collection("donation_history")
-                .orderBy("date", com.google.firebase.firestore.Query.Direction.DESCENDING)
-                .get().await()
-            val history = querySnapshot.toObjects(DonationRecord::class.java)
+            val userId = auth.currentUser?.uid
+                ?: return Result.failure(Exception("User not logged in"))
+
+            // Query vào collection chung "appointments"
+            val querySnapshot = firestore.collection("appointments")
+                .whereEqualTo("userId", userId)
+                .whereEqualTo("status", "COMPLETED") // Chỉ lấy lịch đã hoàn thành/đã cấp
+                .orderBy("dateTime", com.google.firebase.firestore.Query.Direction.DESCENDING)
+                .get()
+                .await()
+
+            val history = querySnapshot.documents.map { doc ->
+                // Map dữ liệu từ Firestore sang DonationRecord
+                DonationRecord(
+                    id = doc.id,
+                    hospitalName = doc.getString("hospitalName") ?: "Bệnh viện",
+                    hospitalAddress = doc.getString("hospitalAddress") ?: "",
+                    date = doc.getDate("dateTime") ?: Date(),
+                    status = doc.getString("status") ?: "COMPLETED",
+                    certificateUrl = doc.getString("certificateUrl") // Lấy link chứng nhận
+                )
+            }
+
             Result.success(history)
         } catch (e: Exception) {
+            e.printStackTrace()
             Result.failure(e)
         }
     }

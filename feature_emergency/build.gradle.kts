@@ -40,6 +40,8 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.auth)
+    implementation("androidx.compose.material:material-icons-extended:1.7.0")
+
     // Remote - Firebase
     // BoM để quản lý phiên bản các thư viện Firebase
     implementation(platform(libs.firebase.bom))

@@ -503,12 +503,21 @@ fun GenericInfoCard(
 
 @Composable
 fun AppointmentCard(appointment: Appointment, isPast: Boolean) {
+    // Xác định trạng thái và màu sắc dựa trên dữ liệu Firebase
+    val (statusText, statusColor) = when {
+        isPast -> "ĐÃ KẾT THÚC" to Color.Gray
+        appointment.status == "CONFIRMED" -> "ĐÃ DUYỆT" to Color(0xFF388E3C) // Màu xanh lá
+        appointment.status == "PENDING" -> "CHỜ DUYỆT" to Color(0xFFFFA000) // Màu vàng cam
+        appointment.status == "CANCELLED" -> "ĐÃ HỦY" to Color.Red
+        else -> appointment.status to Color.Gray
+    }
+
     GenericInfoCard(
         title = appointment.hospitalName,
         detailLine1 = appointment.hospitalAddress,
         detailLine2 = "Thời gian: ${formatDateTime(appointment.dateTime)}",
-        status = if(isPast) "ĐÃ KẾT THÚC" else appointment.status,
-        statusColor = if (appointment.status == "CONFIRMED" && !isPast) Color(0xFF388E3C) else Color.Gray
+        status = statusText,
+        statusColor = statusColor
     )
 }
 
