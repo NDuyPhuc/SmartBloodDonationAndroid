@@ -10,6 +10,7 @@ import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.example.feature_auth.ui.navigation.authGraph
 import com.example.feature_auth.ui.splash.SplashScreen
+import com.example.feature_emergency.ui.history.EmergencyHistoryScreen
 import com.example.feature_map_booking.domain.ui.booking.BookingScreen
 import com.example.feature_map_booking.domain.ui.location_detail.LocationDetailScreen
 import com.example.feature_map_booking.domain.ui.map.MapScreen
@@ -61,7 +62,12 @@ fun AppNavHost(
                 }
             )
         }
-
+        composable("emergency_history_standalone") {
+            // Lúc này IDE sẽ hết báo lỗi vì nó đã được sử dụng ở đây
+            EmergencyHistoryScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
         // 3. Màn hình Dashboard
         composable(route = BottomNavItem.Dashboard.route) {
             DashboardScreen()

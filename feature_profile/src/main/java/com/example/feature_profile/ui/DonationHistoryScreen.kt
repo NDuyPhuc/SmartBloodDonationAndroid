@@ -1,5 +1,6 @@
 package com.example.feature_profile.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,6 +11,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,6 +25,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 // Import ViewModel từ module emergency
 import com.example.feature_emergency.ui.history.EmergencyHistoryViewModel
 import com.example.feature_emergency.domain.model.EmergencyDonationRecord
+import com.smartblood.core.ui.theme.PrimaryRed
 import com.smartblood.profile.domain.model.DonationRecord
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -116,7 +119,7 @@ fun DonationHistoryScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             items(emergencyState.history) { record ->
-                                EmergencyHistoryItemCard(record = record)
+                                com.example.feature_emergency.ui.history.EmergencyHistoryItem(record = record)
                             }
                         }
                     }
@@ -148,6 +151,7 @@ fun DonationHistoryItem(record: DonationRecord) {
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            // Header: Bệnh viện & Trạng thái
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
@@ -167,28 +171,103 @@ fun DonationHistoryItem(record: DonationRecord) {
                     tint = Color(0xFF388E3C) // Xanh lá
                 )
             }
-            HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Color.LightGray.copy(alpha = 0.3f))
-            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                Text("Ngày hiến máu:", color = Color.Gray)
+
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 12.dp),
+                color = Color.LightGray.copy(alpha = 0.3f)
+            )
+
+            // Thông tin chi tiết: Ngày & Lượng máu
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Ngày hiến máu:", color = Color.Gray, style = MaterialTheme.typography.bodyMedium)
                 Text(dateFormat.format(record.date), fontWeight = FontWeight.SemiBold)
             }
 
-            // Nút xem chứng nhận (Nếu có)
+            // --- CẬP NHẬT MỚI: Actual Volume ---
+            if (!record.actualVolume.isNullOrEmpty()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Dung tích:", color = Color.Gray, style = MaterialTheme.typography.bodyMedium)
+                    Text(record.actualVolume, fontWeight = FontWeight.Bold, color = PrimaryRed)
+                }
+            }
+
+            // --- CẬP NHẬT MỚI: KẾT QUẢ XÉT NGHIỆM (LAB RESULT) ---
+            if (record.labResult != null) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFE3F2FD).copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                        .padding(12.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Description, contentDescription = null, tint = Color(0xFF1565C0), modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Kết quả xét nghiệm",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF1565C0)
+                        )
+                    }
+
+                    // Hiển thị lời dặn/kết luận
+                    if (!record.labResult.conclusion.isNullOrEmpty()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Bác sĩ: ${record.labResult.conclusion}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Black.copy(alpha = 0.8f)
+                        )
+                    }
+
+                    // Nút mở file PDF
+                    val docUrl = record.labResult.documentUrl
+                    if (!docUrl.isNullOrEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(
+                            onClick = {
+                                try {
+                                    uriHandler.openUri(docUrl)
+                                } catch (e: Exception) {
+                                    // Bắt lỗi nếu link hỏng hoặc không có trình duyệt
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth().height(36.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF2196F3),
+                                contentColor = Color.White
+                            ),
+                            contentPadding = PaddingValues(0.dp),
+                            shape = RoundedCornerShape(6.dp)
+                        ) {
+                            Text("Xem file chi tiết (PDF)", style = MaterialTheme.typography.labelMedium)
+                        }
+                    }
+                }
+            }
+            // Nút xem chứng nhận (Cũ - Giữ lại)
             if (!record.certificateUrl.isNullOrEmpty()) {
                 Spacer(modifier = Modifier.height(12.dp))
-                Button(
+                OutlinedButton(
                     onClick = { uriHandler.openUri(record.certificateUrl!!) },
                     modifier = Modifier.fillMaxWidth().height(40.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFE8F5E9),
-                        contentColor = Color(0xFF2E7D32)
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = Color(0xFF388E3C)
                     ),
-                    shape = RoundedCornerShape(8.dp),
-                    contentPadding = PaddingValues(0.dp)
+                    border = BorderStroke(1.dp, Color(0xFF388E3C).copy(alpha = 0.5f)),
+                    shape = RoundedCornerShape(8.dp)
                 ) {
-                    Icon(Icons.Default.Description, null, modifier = Modifier.size(16.dp))
+                    Icon(Icons.Default.VerifiedUser, null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Xem Chứng Nhận Hiến Máu", style = MaterialTheme.typography.labelLarge)
+                    Text("Chứng Nhận Hiến Máu", style = MaterialTheme.typography.labelLarge)
                 }
             }
         }

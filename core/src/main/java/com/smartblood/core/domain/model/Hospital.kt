@@ -10,5 +10,7 @@ data class Hospital(
     val location: GeoPoint? = null,
     val phone: String = "",
     val workingHours: String = "",
-    val availableBloodTypes: List<String> = emptyList()
+    val availableBloodTypes: List<String> = emptyList(),
+    val inventory: Map<String, Int> = emptyMap() // Map<Nhóm máu, Số lượng>
+
 )

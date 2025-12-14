@@ -10,5 +10,8 @@ data class BloodRequest(
     val priority: String = "Trung bình",
     val quantity: Int = 0,
     val status: String = "ĐANG HOẠT ĐỘNG",
-    val createdAt: Date = Date()
+    val createdAt: Date = Date(),
+    val preferredVolume: String = "350ml",
+    val userPledgedDate: Date? = null
+
 )

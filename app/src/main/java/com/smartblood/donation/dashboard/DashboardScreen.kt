@@ -38,6 +38,11 @@ fun DashboardScreen(
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
+    // State quản lý Dialog xác nhận
+    var showConfirmDialog by remember { mutableStateOf(false) }
+    var selectedRequest by remember { mutableStateOf<BloodRequest?>(null) }
+    var selectedVolume by remember { mutableStateOf("350") } // Mặc định 350ml
+
     // Xử lý hiển thị thông báo thành công
     LaunchedEffect(state.pledgeSuccess) {
         if (state.pledgeSuccess) {
@@ -69,43 +74,144 @@ fun DashboardScreen(
                 CircularProgressIndicator(color = PrimaryRed)
             }
         } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                // 1. Phần Header: Thông tin cá nhân (Thiết kế mới)
-                HomeHeaderSection(
-                    userName = state.userName,
-                    bloodType = state.bloodType,
-                    nextDonationMessage = state.nextDonationMessage
-                )
+            Box(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                ) {
+                    // 1. Phần Header: Thông tin cá nhân
+                    HomeHeaderSection(
+                        userName = state.userName,
+                        bloodType = state.bloodType,
+                        nextDonationMessage = state.nextDonationMessage
+                    )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                // 2. Tiêu đề danh sách
-                PaddingTextTitle(text = "Cần máu khẩn cấp")
+                    // 2. Tiêu đề danh sách
+                    PaddingTextTitle(text = "Cần máu khẩn cấp")
 
-                // 3. Danh sách yêu cầu
-                Box(modifier = Modifier.weight(1f)) {
-                    if (state.displayableEmergencyRequests.isEmpty()) {
-                        EmptyStateView()
-                    } else {
-                        LazyColumn(
-                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            items(state.displayableEmergencyRequests, key = { it.id }) { request ->
-                                EnhancedEmergencyRequestCard(
-                                    request = request,
-                                    isPledging = state.isPledging,
-                                    onAcceptClick = {
-                                        viewModel.onEvent(DashboardEvent.OnAcceptRequestClicked(request.id))
-                                    }
-                                )
+                    // 3. Danh sách yêu cầu
+                    Box(modifier = Modifier.weight(1f)) {
+                        if (state.displayableEmergencyRequests.isEmpty()) {
+                            EmptyStateView()
+                        } else {
+                            LazyColumn(
+                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                items(state.displayableEmergencyRequests, key = { it.id }) { request ->
+                                    EnhancedEmergencyRequestCard(
+                                        request = request,
+                                        isPledging = state.isPledging,
+                                        isEligible = state.isEligibleToDonate,
+                                        daysToWait = state.daysToWait,
+                                        onAcceptClick = {
+                                            // KHI CLICK NÚT TRÊN CARD:
+                                            // 1. Lưu request đang chọn
+                                            selectedRequest = request
+                                            // 2. Reset volume về mặc định hoặc theo request yêu cầu (nếu có)
+                                            val preferred = request.preferredVolume.replace("ml", "").trim()
+                                            selectedVolume = if (preferred.isNotEmpty() && preferred.all { char -> char.isDigit() }) preferred else "350"
+                                            // 3. Hiển thị Dialog
+                                            showConfirmDialog = true
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
+                }
+
+                // --- DIALOG XÁC NHẬN (Đặt ở đây để đè lên nội dung) ---
+                if (showConfirmDialog && selectedRequest != null) {
+                    AlertDialog(
+                        onDismissRequest = { showConfirmDialog = false },
+                        title = {
+                            Text(
+                                text = "Xác nhận hiến máu",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                        },
+                        text = {
+                            Column {
+                                Text(
+                                    text = "Bạn đang đăng ký hiến máu cho:",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                Text(
+                                    text = selectedRequest!!.hospitalName,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = PrimaryRed
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                Text(
+                                    text = "Chọn dung tích hiến:",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                // Hàng nút chọn dung tích
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    val volumes = listOf("250", "350", "450")
+                                    volumes.forEach { vol ->
+                                        val isSelected = selectedVolume == vol
+                                        FilterChip(
+                                            selected = isSelected,
+                                            onClick = { selectedVolume = vol },
+                                            label = {
+                                                Text(
+                                                    text = "${vol}ml",
+                                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                                )
+                                            },
+                                            leadingIcon = if (isSelected) {
+                                                { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
+                                            } else null
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Bệnh viện khuyến khích: ${selectedRequest!!.preferredVolume}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.Gray,
+                                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                                )
+                            }
+                        },
+                        confirmButton = {
+                            Button(
+                                onClick = {
+                                    showConfirmDialog = false
+                                    // Gửi sự kiện kèm ID và Volume đã chọn
+                                    viewModel.onEvent(
+                                        DashboardEvent.OnAcceptRequestClicked(
+                                            requestId = selectedRequest!!.id,
+                                            volume = "${selectedVolume}ml"
+                                        )
+                                    )
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = PrimaryRed)
+                            ) {
+                                Text("Xác nhận đăng ký")
+                            }
+                        },
+                        dismissButton = {
+                            OutlinedButton(onClick = { showConfirmDialog = false }) {
+                                Text("Hủy bỏ")
+                            }
+                        }
+                    )
                 }
             }
         }
@@ -215,6 +321,8 @@ fun PaddingTextTitle(text: String) {
 fun EnhancedEmergencyRequestCard(
     request: BloodRequest,
     isPledging: Boolean,
+    isEligible: Boolean,
+    daysToWait: Long,
     onAcceptClick: () -> Unit
 ) {
     val dateFormat = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
@@ -248,7 +356,6 @@ fun EnhancedEmergencyRequestCard(
                         color = PrimaryRed
                     )
                 }
-
                 // Badge số lượng
                 Surface(
                     color = PrimaryRed.copy(alpha = 0.1f),
@@ -264,7 +371,6 @@ fun EnhancedEmergencyRequestCard(
                 }
             }
 
-            // Dùng Divider thay vì HorizontalDivider để đảm bảo tương thích
             Divider(
                 modifier = Modifier.padding(vertical = 12.dp),
                 color = Color.LightGray.copy(alpha = 0.3f)
@@ -280,37 +386,80 @@ fun EnhancedEmergencyRequestCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            InfoRowWithIcon(
-                icon = Icons.Outlined.AccessTime,
-                text = "Ngày đăng: ${dateFormat.format(request.createdAt)}",
-                color = Color.Gray
-            )
+            // --- HIỂN THỊ DUNG TÍCH YÊU CẦU ---
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                InfoRowWithIcon(
+                    icon = Icons.Outlined.AccessTime,
+                    text = "Ngày: ${dateFormat.format(request.createdAt)}",
+                    color = Color.Gray
+                )
+
+                // Badge dung tích yêu cầu
+                Surface(
+                    color = Color(0xFFE3F2FD), // Màu xanh nhạt
+                    shape = RoundedCornerShape(4.dp)
+                ) {
+                    Text(
+                        text = "Yêu cầu: ${request.preferredVolume}",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = Color(0xFF1565C0), // Màu xanh đậm
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             // Footer: Nút hành động
-            Button(
-                onClick = onAcceptClick,
-                enabled = !isPledging,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = PrimaryRed,
-                    disabledContainerColor = PrimaryRed.copy(alpha = 0.5f)
-                ),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                if (isPledging) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        color = Color.White,
-                        strokeWidth = 2.dp
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Đang xử lý...")
-                } else {
-                    Text("Tôi muốn hiến máu", fontWeight = FontWeight.Bold)
+            if (isEligible) {
+                Button(
+                    onClick = onAcceptClick,
+                    enabled = !isPledging,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PrimaryRed,
+                        disabledContainerColor = PrimaryRed.copy(alpha = 0.5f)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    if (isPledging) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Đang xử lý...")
+                    } else {
+                        Text("Tôi muốn hiến máu", fontWeight = FontWeight.Bold)
+                    }
+                }
+            } else {
+                // HIỂN THỊ CẢNH BÁO NẾU KHÔNG ĐỦ ĐIỀU KIỆN
+                Surface(
+                    color = Color.Gray.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.Gray.copy(alpha = 0.5f)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Info, null, tint = Color.Gray)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Bạn cần chờ thêm $daysToWait ngày để hồi phục.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.DarkGray
+                        )
+                    }
                 }
             }
         }

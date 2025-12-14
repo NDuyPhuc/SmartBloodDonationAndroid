@@ -45,30 +45,46 @@ class ProfileRepositoryImpl @Inject constructor(
             // Query vào collection chung "appointments"
             val querySnapshot = firestore.collection("appointments")
                 .whereEqualTo("userId", userId)
-                .whereEqualTo("status", "COMPLETED") // Chỉ lấy lịch đã hoàn thành/đã cấp
+                // .whereEqualTo("status", "COMPLETED") // Tạm bỏ để test xem có hiện lịch sử không
                 .orderBy("dateTime", com.google.firebase.firestore.Query.Direction.DESCENDING)
                 .get()
                 .await()
 
             val history = querySnapshot.documents.map { doc ->
-                // Map dữ liệu từ Firestore sang DonationRecord
+                // --- XỬ LÝ AN TOÀN CHO LAB RESULT ---
+                // Lấy field labResult dạng Map để tránh lỗi Deserialization
+                val labResultMap = doc.get("labResult") as? Map<String, Any>
+                val labResult = if (labResultMap != null) {
+                    com.smartblood.core.domain.model.LabResult(
+                        documentUrl = labResultMap["documentUrl"] as? String,
+                        conclusion = labResultMap["conclusion"] as? String,
+                        // Xử lý an toàn: Nếu là Timestamp thì convert, nếu null thì thôi
+                        recordedAt = (labResultMap["recordedAt"] as? com.google.firebase.Timestamp)?.toDate()
+                    )
+                } else {
+                    null
+                }
+
+                // Map dữ liệu thủ công
                 DonationRecord(
                     id = doc.id,
                     hospitalName = doc.getString("hospitalName") ?: "Bệnh viện",
                     hospitalAddress = doc.getString("hospitalAddress") ?: "",
+                    // Xử lý ngày tháng an toàn
                     date = doc.getDate("dateTime") ?: Date(),
                     status = doc.getString("status") ?: "COMPLETED",
-                    certificateUrl = doc.getString("certificateUrl") // Lấy link chứng nhận
+                    certificateUrl = doc.getString("certificateUrl"),
+                    actualVolume = doc.getString("actualVolume"), // Lấy dung tích thực tế
+                    labResult = labResult // Gán kết quả xét nghiệm
                 )
             }
-
             Result.success(history)
         } catch (e: Exception) {
             e.printStackTrace()
+            // Log lỗi ra để debug nếu cần
             Result.failure(e)
         }
     }
-
     override fun signOut() {
         auth.signOut()
     }

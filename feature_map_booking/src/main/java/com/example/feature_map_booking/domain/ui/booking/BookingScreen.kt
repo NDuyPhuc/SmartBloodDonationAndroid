@@ -1,8 +1,5 @@
 package com.example.feature_map_booking.domain.ui.booking
 
-
-// feature_map_booking/src/main/java/com/smartblood/mapbooking/ui/booking/BookingScreen.kt
-
 import android.app.DatePickerDialog
 import android.widget.DatePicker
 import androidx.compose.foundation.BorderStroke
@@ -15,9 +12,11 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.smartblood.core.domain.model.TimeSlot
 import java.text.SimpleDateFormat
@@ -34,8 +33,9 @@ fun BookingScreen(
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
-
     val calendar = Calendar.getInstance()
+
+    // Date Picker Dialog
     val datePickerDialog = remember {
         DatePickerDialog(
             context,
@@ -51,6 +51,7 @@ fun BookingScreen(
         }
     }
 
+    // Effects
     LaunchedEffect(state.bookingSuccess) {
         if (state.bookingSuccess) {
             onBookingSuccess()
@@ -64,6 +65,7 @@ fun BookingScreen(
         }
     }
 
+    // UI
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -86,13 +88,16 @@ fun BookingScreen(
                 .padding(16.dp)
                 .fillMaxSize()
         ) {
+            // Tên bệnh viện
             Text(
                 text = state.hospitalName,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
+
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Chọn ngày
             val dateFormat = remember { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()) }
             Text("Chọn ngày: ${dateFormat.format(state.selectedDate)}")
             Spacer(modifier = Modifier.height(8.dp))
@@ -101,35 +106,71 @@ fun BookingScreen(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
+
+            // Chọn khung giờ
             Text("Chọn khung giờ:", style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(8.dp))
 
             if (state.isLoadingSlots) {
                 CircularProgressIndicator()
             } else {
-                // --- DÒNG ĐÃ SỬA LỖI ---
+                // Biến tạm để lưu giờ đang chọn trên UI (ViewModel đã quản lý nhưng dùng local state để highlight nhanh)
                 var selectedTime by remember { mutableStateOf<String?>(null) }
 
                 LazyVerticalGrid(
                     columns = GridCells.Adaptive(minSize = 100.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    // Giới hạn chiều cao cho Grid để không chiếm hết màn hình
+                    modifier = Modifier.height(200.dp)
                 ) {
                     items(state.timeSlots) { slot ->
+                        // Gọi hàm TimeSlotItem được định nghĩa ở dưới cùng file
                         TimeSlotItem(
                             timeSlot = slot,
                             isSelected = slot.time == selectedTime,
-                            onSelect = {
-                                selectedTime = it
-                                viewModel.onEvent(BookingEvent.OnSlotSelected(it))
+                            onSelect = { time ->
+                                selectedTime = time
+                                viewModel.onEvent(BookingEvent.OnSlotSelected(time))
                             }
                         )
                     }
                 }
             }
 
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // --- CHỌN DUNG TÍCH (PHẦN MỚI) ---
+            Text("Đăng ký lượng máu hiến:", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                val volumes = listOf("250ml", "350ml", "450ml")
+                volumes.forEach { volume ->
+                    val isSelected = state.selectedVolume == volume
+                    OutlinedButton(
+                        onClick = { viewModel.onEvent(BookingEvent.OnVolumeSelected(volume)) },
+                        colors = if (isSelected)
+                            ButtonDefaults.outlinedButtonColors(
+                                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                contentColor = MaterialTheme.colorScheme.primary
+                            )
+                        else
+                            ButtonDefaults.outlinedButtonColors(),
+                        border = if (isSelected)
+                            BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+                        else
+                            BorderStroke(1.dp, Color.Gray)
+                    ) {
+                        Text(text = volume, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
+                    }
+                }
+            }
+            // --------------------------------
+
             Spacer(modifier = Modifier.weight(1f))
 
+            // Nút Xác nhận
             Button(
                 onClick = { viewModel.onEvent(BookingEvent.OnConfirmBooking) },
                 enabled = !state.isBooking,
@@ -147,6 +188,7 @@ fun BookingScreen(
     }
 }
 
+// --- ĐÂY LÀ HÀM BỊ THIẾU DẪN ĐẾN LỖI UNRESOLVED REFERENCE ---
 @Composable
 fun TimeSlotItem(
     timeSlot: TimeSlot,
@@ -157,6 +199,7 @@ fun TimeSlotItem(
         containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
         contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
     )
+
     OutlinedButton(
         onClick = { onSelect(timeSlot.time) },
         enabled = timeSlot.isAvailable,

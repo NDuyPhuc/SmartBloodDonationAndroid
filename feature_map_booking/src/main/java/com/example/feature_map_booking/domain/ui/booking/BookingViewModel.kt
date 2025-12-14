@@ -46,9 +46,14 @@ class BookingViewModel @Inject constructor(
             is BookingEvent.OnSlotSelected -> {
                 selectedTime = event.time
             }
+            is BookingEvent.OnVolumeSelected -> {
+                _state.update { it.copy(selectedVolume = event.volume) }
+            }
+
             is BookingEvent.OnConfirmBooking -> {
                 confirmBooking()
             }
+
         }
     }
 
@@ -92,9 +97,10 @@ class BookingViewModel @Inject constructor(
 
                 // 5. Lấy ra đối tượng Date cuối cùng đã được kết hợp
                 val finalDateTime = calendar.time
+                val volumeToBook = _state.value.selectedVolume
 
                 // 6. Gọi UseCase để đặt lịch
-                bookAppointmentUseCase(hospitalId, finalDateTime)
+                bookAppointmentUseCase(hospitalId, finalDateTime, volumeToBook)
                     .onSuccess {
                         _state.update { it.copy(isBooking = false, bookingSuccess = true) }
                     }

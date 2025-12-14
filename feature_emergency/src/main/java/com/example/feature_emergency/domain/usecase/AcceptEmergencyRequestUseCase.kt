@@ -9,7 +9,7 @@ import javax.inject.Inject
 class AcceptEmergencyRequestUseCase @Inject constructor(
     private val emergencyRepository: EmergencyRepository
 ) {
-    suspend operator fun invoke(requestId: String, userProfile: UserProfile): Result<Unit> {
+    suspend operator fun invoke(requestId: String, userProfile: UserProfile, volume: String): Result<Unit> {
         // Kiểm tra thông tin cần thiết từ profile
         if (userProfile.uid.isBlank() || userProfile.fullName.isBlank()) {
             return Result.failure(Exception("Thông tin người dùng không đầy đủ."))
@@ -20,8 +20,12 @@ class AcceptEmergencyRequestUseCase @Inject constructor(
             userId = userProfile.uid,
             userName = userProfile.fullName,
             userPhone = userProfile.phoneNumber ?: "",
-            userBloodType = userProfile.bloodType ?: "N/A"
+            userBloodType = userProfile.bloodType ?: "N/A",
             // pledgedAt và status sẽ dùng giá trị mặc định
+            pledgedVolume = volume,
+            status = "Pending"
+
+
         )
 
         // Gọi phương thức từ repository

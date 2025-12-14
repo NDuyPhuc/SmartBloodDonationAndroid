@@ -103,7 +103,7 @@ class MapBookingRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun bookAppointment(hospitalId: String, dateTime: Date): Result<Unit> {
+    override suspend fun bookAppointment(hospitalId: String, dateTime: Date, volume: String): Result<Unit> {
         val currentUser = auth.currentUser ?: return Result.failure(Exception("User not authenticated."))
 
         // ... (Giữ nguyên các đoạn code lấy thông tin bệnh viện ở trên) ...
@@ -125,8 +125,10 @@ class MapBookingRepositoryImpl @Inject constructor(
                 dateTime = dateTime,
 
                 // --- SỬA Ở ĐÂY: Đổi từ "CONFIRMED" thành "PENDING" ---
-                status = "PENDING"
+                status = "PENDING",
                 // "PENDING" nghĩa là Chờ duyệt. Admin trên web sẽ bấm duyệt để chuyển thành "CONFIRMED"
+                registeredVolume = volume,
+
             )
 
             firestore.collection("appointments").document(appointmentId).set(appointment).await()
@@ -143,6 +145,7 @@ class MapBookingRepositoryImpl @Inject constructor(
             close()
             return@callbackFlow
         }
+
         val query = firestore.collection("appointments")
             .whereEqualTo("userId", userId)
             .orderBy("dateTime", com.google.firebase.firestore.Query.Direction.DESCENDING)
@@ -152,8 +155,44 @@ class MapBookingRepositoryImpl @Inject constructor(
                 trySend(Result.failure(error))
                 return@addSnapshotListener
             }
+
             if (snapshot != null) {
-                val appointments = snapshot.toObjects(Appointment::class.java)
+                // --- SỬA LỖI CRASH: Map dữ liệu thủ công thay vì dùng .toObjects() ---
+                val appointments = snapshot.documents.map { doc ->
+
+                    // 1. Xử lý an toàn cho LabResult
+                    val labResultMap = doc.get("labResult") as? Map<String, Any>
+                    val labResult = if (labResultMap != null) {
+                        com.smartblood.core.domain.model.LabResult(
+                            documentUrl = labResultMap["documentUrl"] as? String,
+                            conclusion = labResultMap["conclusion"] as? String,
+                            // Xử lý recordedAt: Chấp nhận Timestamp hoặc Date, bỏ qua nếu là HashMap lỗi
+                            recordedAt = when (val rawDate = labResultMap["recordedAt"]) {
+                                is com.google.firebase.Timestamp -> rawDate.toDate()
+                                is java.util.Date -> rawDate
+                                else -> null // Bỏ qua nếu dữ liệu sai định dạng (HashMap)
+                            }
+                        )
+                    } else {
+                        null
+                    }
+
+                    // 2. Map thủ công các trường của Appointment
+                    Appointment(
+                        id = doc.id,
+                        userId = doc.getString("userId") ?: "",
+                        hospitalId = doc.getString("hospitalId") ?: "",
+                        hospitalName = doc.getString("hospitalName") ?: "",
+                        hospitalAddress = doc.getString("hospitalAddress") ?: "",
+                        dateTime = doc.getDate("dateTime") ?: java.util.Date(),
+                        status = doc.getString("status") ?: "PENDING",
+
+                        // Map thêm các trường mới
+                        actualVolume = doc.getString("actualVolume"),
+                        registeredVolume = doc.getString("registeredVolume") ?: "350ml",
+                        labResult = labResult
+                    )
+                }
                 trySend(Result.success(appointments))
             }
         }

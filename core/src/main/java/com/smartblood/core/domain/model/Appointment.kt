@@ -11,5 +11,10 @@ data class Appointment(
     val hospitalName: String = "",
     val hospitalAddress: String = "",
     val dateTime: Date = Date(),
-    val status: String = "PENDING" // PENDING, CONFIRMED, CANCELED, COMPLETED
+    val status: String = "PENDING", // PENDING, CONFIRMED, CANCELED, COMPLETED
+    val registeredVolume: String = "350ml",
+
+    // --- CÁC TRƯỜNG MỚI ---
+    val actualVolume: String? = null, // Dung tích thực tế đã hiến (VD: "350ml")
+    val labResult: LabResult? = null  // Kết quả xét nghiệm đính kèm
 )

@@ -7,9 +7,17 @@ data class UserProfile(
     val email: String = "",
     val fullName: String = "",
     val phoneNumber: String? = null,
-    val bloodType: String? = null, // Ví dụ: "A+", "O-", ...
-    val avatarUrl: String? = null, // <<-- ĐÂY LÀ CHỖ CẦN THÊM HOẶC KIỂM TRA
-    val dateOfBirth: Date? = null,
-    val gender: String? = null, // "Male", "Female", "Other"
-    val lastDonationDate: Date? = null
+    val bloodType: String? = null,
+    val avatarUrl: String? = null,
+    val dateOfBirth: String? = null, // Lưu ý: Nếu Web lưu string thì để String
+    val gender: String? = null,
+
+    // --- SỬA Ở ĐÂY ---
+    // Đổi từ Date? sang String? để khớp với dữ liệu "14/12/2025" trên Firestore
+    val lastDonationDate: String? = null,
+
+    val donationCount: Int = 0,
+    val lastDonationType: String? = null,
+    val isPriority: Boolean = false,
+    val status: String = "Active"
 )

@@ -12,5 +12,8 @@ data class Donor(
     val userBloodType: String = "",
     val requestedBloodType: String = "",
     val pledgedAt: Date = Date(),
-    val status: String = "PLEDGED"
+    val status: String = "Pending",
+    val pledgedVolume: String = "",
+    val rejectionReason: String? = null
+
 )

@@ -13,10 +13,8 @@ interface MapBookingRepository {
     suspend fun getNearbyHospitals(lat: Double, lng: Double, radiusKm: Double): Result<List<Hospital>>
     suspend fun getHospitalDetails(hospitalId: String): Result<Hospital>
     suspend fun getAvailableSlots(hospitalId: String, date: Date): Result<List<TimeSlot>>
-    suspend fun bookAppointment(
-        hospitalId: String,
-        dateTime: Date
-    ): Result<Unit>
+    suspend fun bookAppointment(hospitalId: String, dateTime: Date, volume: String): Result<Unit>
+
 
     fun getMyAppointments(): Flow<Result<List<Appointment>>>
 

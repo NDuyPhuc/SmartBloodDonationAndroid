@@ -1,14 +1,19 @@
 package com.example.feature_emergency.ui.history
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material.icons.filled.VerifiedUser
+import androidx.compose.material.icons.outlined.StarBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -57,53 +62,81 @@ fun EmergencyHistoryScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(state.history) { record ->
-                    EmergencyHistoryItem(record)
+                    EmergencyHistoryItem(record = record)
                 }
             }
         }
     }
 }
 
+/**
+ * Component hiển thị item lịch sử khẩn cấp.
+ * Được public để DonationHistoryScreen (Module Profile) có thể gọi dùng chung.
+ */
 @Composable
 fun EmergencyHistoryItem(record: EmergencyDonationRecord) {
-    val dateFormat = remember { SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()) }
+    val dateFormat = remember { SimpleDateFormat("HH:mm - dd/MM/yyyy", Locale.getDefault()) }
     val uriHandler = LocalUriHandler.current
 
-    // Màu sắc badge trạng thái
-    val (statusColor, statusText) = when(record.status) {
-        "Completed" -> Color(0xFF4CAF50) to "Đã hoàn thành"
-        "Pending" -> Color(0xFFFF9800) to "Đang chờ"
-        "Cancelled" -> Color(0xFFF44336) to "Đã hủy"
-        else -> Color.Gray to record.status
+    // --- 1. CHUẨN HÓA DỮ LIỆU ---
+    // Xử lý status linh hoạt, không phân biệt hoa thường
+    val status = record.status.trim()
+
+    // --- 2. XÁC ĐỊNH TRẠNG THÁI TỪ CHỐI ---
+    // Kiểm tra kỹ: Hoặc status là từ chối, HOẶC có lý do từ chối đi kèm
+    val isRejected = status.equals("Rejected", ignoreCase = true) ||
+            status.equals("Cancelled", ignoreCase = true) ||
+            status.equals("Bị từ chối", ignoreCase = true) ||
+            !record.rejectionReason.isNullOrBlank()
+
+    // --- 3. CẤU HÌNH MÀU SẮC VÀ TEXT ---
+    val (statusColor, statusBgColor, statusText) = when {
+        // Hoàn thành
+        status.equals("Completed", ignoreCase = true) || status.equals("Đã hiến", ignoreCase = true) ->
+            Triple(Color(0xFF4CAF50), Color(0xFFE8F5E9), "Đã hiến")
+
+        // Từ chối
+        isRejected ->
+            Triple(Color(0xFFD32F2F), Color(0xFFFFEBEE), "Đã bị từ chối")
+
+        // Đang chờ
+        status.equals("Pending", ignoreCase = true) || status.equals("Pledged", ignoreCase = true) ->
+            Triple(Color(0xFFFF9800), Color(0xFFFFF3E0), "Đang chờ")
+
+        // Mặc định (giữ nguyên text gốc nếu không khớp)
+        else -> Triple(Color.Gray, Color(0xFFF5F5F5), record.status)
     }
+
+    // Viền đỏ nếu bị từ chối
+    val cardBorder = if (isRejected) BorderStroke(1.dp, Color(0xFFFFCDD2)) else null
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(4.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        shape = RoundedCornerShape(12.dp),
+        border = cardBorder
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Header: Bệnh viện & Badge
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
-            ) {
+            // --- HEADER: Tên bệnh viện & Badge trạng thái ---
+            Row(verticalAlignment = Alignment.Top) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = record.hospitalName,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
-                    Text(
-                        text = "Ngày hiến: ${dateFormat.format(record.pledgedAt)}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.Gray
-                    )
+                    // Chỉ hiện label "Yêu cầu khẩn cấp" nếu không bị từ chối (cho đỡ rối)
+                    if (!isRejected) {
+                        Text(
+                            text = "Yêu cầu khẩn cấp",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Red
+                        )
+                    }
                 }
-
                 Surface(
-                    color = statusColor.copy(alpha = 0.1f),
+                    color = statusBgColor,
                     shape = RoundedCornerShape(16.dp)
                 ) {
                     Text(
@@ -116,53 +149,141 @@ fun EmergencyHistoryItem(record: EmergencyDonationRecord) {
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider(color = Color.LightGray.copy(alpha = 0.3f))
-            Spacer(modifier = Modifier.height(12.dp))
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 12.dp),
+                color = Color.LightGray.copy(alpha = 0.3f)
+            )
 
-            // Phần Đánh giá & Nhận xét (Chỉ hiện khi đã Completed và có rating)
-            if (record.status == "Completed") {
-                if (record.rating > 0) {
+            // --- THÔNG TIN CHI TIẾT ---
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Tiếp nhận lúc:", color = Color.Gray, style = MaterialTheme.typography.bodyMedium)
+                Text(dateFormat.format(record.pledgedAt), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.bodyMedium)
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Nhóm máu:", color = Color.Gray, style = MaterialTheme.typography.bodyMedium)
+                Text(record.userBloodType, fontWeight = FontWeight.Bold, color = Color.Red, style = MaterialTheme.typography.bodyMedium)
+            }
+
+            // --- PHẦN 1: HIỂN THỊ LÝ DO TỪ CHỐI (FIX LỖI 2) ---
+            if (isRejected && !record.rejectionReason.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFFFF5F5), RoundedCornerShape(8.dp))
+                        .border(1.dp, Color(0xFFFFCDD2), RoundedCornerShape(8.dp))
+                        .padding(12.dp)
+                ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Đánh giá từ bệnh viện:", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = null,
+                            tint = Color(0xFFD32F2F),
+                            modifier = Modifier.size(16.dp)
+                        )
                         Spacer(modifier = Modifier.width(8.dp))
-                        // Hiển thị sao
-                        repeat(5) { index ->
-                            Icon(
-                                imageVector = if (index < record.rating) Icons.Filled.Star else Icons.Outlined.StarBorder,
-                                contentDescription = null,
-                                tint = Color(0xFFFFC107), // Màu vàng
-                                modifier = Modifier.size(16.dp)
-                            )
+                        Text(
+                            text = "Lý do từ chối:",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFD32F2F)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = record.rejectionReason ?: "",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color(0xFFB71C1C),
+                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                    )
+                }
+            }
+
+            // --- PHẦN 2: HIỂN THỊ KẾT QUẢ XÉT NGHIỆM (FIX LỖI 1) ---
+            // Chỉ hiển thị nếu KHÔNG bị từ chối và CÓ dữ liệu labResult
+            if (!isRejected && record.labResult != null) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color(0xFFE3F2FD).copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                        .padding(12.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Description,
+                            contentDescription = null,
+                            tint = Color(0xFF1565C0),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Kết quả xét nghiệm",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF1565C0)
+                        )
+                    }
+
+                    // Hiển thị lời dặn bác sĩ
+                    if (!record.labResult.conclusion.isNullOrEmpty()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Bác sĩ: ${record.labResult.conclusion}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Black.copy(alpha = 0.8f)
+                        )
+                    }
+
+                    // Nút xem file PDF
+                    val docUrl = record.labResult.documentUrl
+                    if (!docUrl.isNullOrEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(
+                            onClick = {
+                                try {
+                                    uriHandler.openUri(docUrl)
+                                } catch (e: Exception) {
+                                    // Log lỗi nếu không mở được link
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth().height(36.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF2196F3),
+                                contentColor = Color.White
+                            ),
+                            contentPadding = PaddingValues(0.dp),
+                            shape = RoundedCornerShape(6.dp)
+                        ) {
+                            // Icon PDF nhỏ
+                            Icon(Icons.Default.Description, null, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Xem file kết quả (PDF)", style = MaterialTheme.typography.labelMedium)
                         }
                     }
                 }
-
-                if (!record.review.isNullOrBlank()) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "\"${record.review}\"",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                        color = Color.DarkGray,
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
             }
 
-            // Button Xem chứng nhận
-            if (!record.certificateUrl.isNullOrBlank()) {
-                Button(
+            // Hiển thị nút chứng nhận (logic cũ - giữ lại nếu cần)
+            else if (!isRejected && !record.certificateUrl.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedButton(
                     onClick = { uriHandler.openUri(record.certificateUrl) },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE8F5E9), contentColor = Color(0xFF2E7D32)),
+                    modifier = Modifier.fillMaxWidth().height(40.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF388E3C)),
+                    border = BorderStroke(1.dp, Color(0xFF388E3C).copy(alpha = 0.5f)),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Icon(Icons.Default.VerifiedUser, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Default.VerifiedUser, null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Xem Chứng Nhận")
+                    Text("Chứng Nhận Hiến Máu", style = MaterialTheme.typography.labelLarge)
                 }
             }
         }

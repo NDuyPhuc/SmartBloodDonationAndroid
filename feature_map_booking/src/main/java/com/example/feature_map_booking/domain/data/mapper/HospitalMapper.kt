@@ -22,6 +22,8 @@ fun HospitalDto.toDomain(id: String): Hospital {
         location = geoPoint,
         phone = displayPhone,
         workingHours = displayHours,
-        availableBloodTypes = availableTypes
+        availableBloodTypes = availableTypes,
+        inventory = this.inventory
+
     )
 }

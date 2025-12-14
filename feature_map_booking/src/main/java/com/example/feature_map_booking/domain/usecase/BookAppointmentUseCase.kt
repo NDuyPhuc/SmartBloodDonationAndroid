@@ -9,13 +9,13 @@ import kotlin.Result
 class BookAppointmentUseCase @Inject constructor(
     private val repository: MapBookingRepository
 ) {
-    suspend operator fun invoke(hospitalId: String, dateTime: Date): Result<Unit> {
+    suspend operator fun invoke(hospitalId: String, dateTime: Date, volume: String): Result<Unit> {
         if (hospitalId.isBlank()) {
             return Result.failure(IllegalArgumentException("Hospital ID is required."))
         }
         if (dateTime.before(Date())) {
             return Result.failure(IllegalArgumentException("Cannot book an appointment in the past."))
         }
-        return repository.bookAppointment(hospitalId, dateTime)
+        return repository.bookAppointment(hospitalId, dateTime, volume)
     }
 }

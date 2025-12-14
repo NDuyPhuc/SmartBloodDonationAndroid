@@ -11,6 +11,7 @@ data class BookingState(
     val isLoadingSlots: Boolean = false,
     val isBooking: Boolean = false,
     val selectedDate: Date = Date(),
+    val selectedVolume: String = "350ml",
     val timeSlots: List<TimeSlot> = emptyList(),
     val error: String? = null,
     val bookingSuccess: Boolean = false
@@ -18,6 +19,8 @@ data class BookingState(
 
 sealed class BookingEvent {
     data class OnDateSelected(val date: Date) : BookingEvent()
+    data class OnVolumeSelected(val volume: String) : BookingEvent()
+
     data class OnSlotSelected(val time: String) : BookingEvent()
     object OnConfirmBooking : BookingEvent()
 }

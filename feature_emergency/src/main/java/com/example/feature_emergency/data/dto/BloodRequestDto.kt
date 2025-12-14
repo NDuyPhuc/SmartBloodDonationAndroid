@@ -12,7 +12,9 @@ data class BloodRequestDto(
     val priority: String = "Trung bình",
     val quantity: Int = 0,
     val status: String = "ĐANG HOẠT ĐỘNG",
-    val createdAt: Timestamp = Timestamp.now()
+    val createdAt: Timestamp = Timestamp.now(),
+    val preferredVolume: String = "350ml"
+
 )
 
 // Hàm chuyển đổi từ DTO sang Domain Model
@@ -25,6 +27,8 @@ fun BloodRequestDto.toDomain(id: String): BloodRequest {
         priority = this.priority,
         quantity = this.quantity,
         status = this.status,
-        createdAt = this.createdAt.toDate() // Việc chuyển đổi diễn ra an toàn ở đây
+        createdAt = this.createdAt.toDate(), // Việc chuyển đổi diễn ra an toàn ở đây
+        preferredVolume = this.preferredVolume
+
     )
 }

@@ -38,10 +38,11 @@ class EmergencyRepositoryImpl @Inject constructor(
         val userId = auth.currentUser?.uid
         if (userId == null) {
             trySend(Result.failure(Exception("Người dùng chưa đăng nhập.")))
-            close() // Đóng Flow nếu không có user
+            close()
             return@callbackFlow
         }
 
+        // Query vào sub-collection "donors"
         val query = firestore.collectionGroup("donors").whereEqualTo("userId", userId)
 
         val listenerRegistration = query.addSnapshotListener { snapshot, error ->
@@ -49,25 +50,46 @@ class EmergencyRepositoryImpl @Inject constructor(
                 trySend(Result.failure(error))
                 return@addSnapshotListener
             }
-            if (snapshot == null) return@addSnapshotListener
-
-            // Lấy danh sách các document `blood_request` cha
-            val parentRequestRefs = snapshot.documents.mapNotNull { it.reference.parent.parent }
-
-            if (parentRequestRefs.isEmpty()) {
-                trySend(Result.success(emptyList())) // Gửi danh sách rỗng nếu không có
+            if (snapshot == null || snapshot.isEmpty) {
+                trySend(Result.success(emptyList()))
                 return@addSnapshotListener
             }
 
-            // Dùng coroutine để lấy dữ liệu từ các ref này
-            // Vì listener này sẽ được gọi mỗi khi có thay đổi, chúng ta cần fetch lại
+            // 1. Tạo Map lưu trữ: ParentID -> PledgedTime (Thời gian chấp nhận)
+            // Lấy pledgedAt từ document donor
+            val pledgedMap = snapshot.documents.associate { doc ->
+                val parentId = doc.reference.parent.parent?.id ?: ""
+                val pledgedAt = doc.getDate("pledgedAt") ?: Date()
+                parentId to pledgedAt
+            }
+
+            val parentRequestRefs = snapshot.documents.mapNotNull { it.reference.parent.parent }
+
+            if (parentRequestRefs.isEmpty()) {
+                trySend(Result.success(emptyList()))
+                return@addSnapshotListener
+            }
+
             launch {
                 try {
                     val requestSnapshots = parentRequestRefs.map { it.get().await() }
+
                     val bloodRequests = requestSnapshots.mapNotNull { doc ->
-                        doc.toObject<BloodRequestDto>()?.toDomain(id = doc.id)
+                        val request = doc.toObject<BloodRequestDto>()?.toDomain(id = doc.id)
+
+                        // 2. Gán thời gian chấp nhận vào Model
+                        // Lấy thời gian từ Map đã tạo ở bước 1
+                        val pledgedTime = pledgedMap[doc.id]
+
+                        request?.copy(userPledgedDate = pledgedTime)
                     }
-                    trySend(Result.success(bloodRequests))
+
+                    // 3. SẮP XẾP: Mới nhất lên đầu (Dựa vào userPledgedDate)
+                    val sortedRequests = bloodRequests.sortedByDescending {
+                        it.userPledgedDate ?: it.createdAt
+                    }
+
+                    trySend(Result.success(sortedRequests))
                 } catch (e: Exception) {
                     trySend(Result.failure(e))
                 }
@@ -75,7 +97,6 @@ class EmergencyRepositoryImpl @Inject constructor(
         }
         awaitClose { listenerRegistration.remove() }
     }
-
     override suspend fun getEmergencyDonationHistory(): Result<List<EmergencyDonationRecord>> {
         return try {
             val userId = auth.currentUser?.uid
@@ -92,9 +113,8 @@ class EmergencyRepositoryImpl @Inject constructor(
             val historyList = coroutineScope {
                 querySnapshot.documents.map { donorDoc ->
                     async {
-                        // Lấy reference đến document cha (blood_requests/{requestId})
+                        // Lấy reference đến document cha
                         val parentRef = donorDoc.reference.parent.parent
-
                         var hospitalName = "Không xác định"
 
                         if (parentRef != null) {
@@ -102,7 +122,26 @@ class EmergencyRepositoryImpl @Inject constructor(
                             hospitalName = parentSnap.getString("hospitalName") ?: "Không xác định"
                         }
 
-                        // Map dữ liệu
+                        // --- XỬ LÝ MAP LAB RESULT TỪ FIRESTORE ---
+                        // Firestore lưu object dưới dạng Map<String, Any>
+                        val labResultMap = donorDoc.get("labResult") as? Map<String, Any>
+                        val labResult = if (labResultMap != null) {
+                            com.smartblood.core.domain.model.LabResult(
+                                documentUrl = labResultMap["documentUrl"] as? String,
+                                conclusion = labResultMap["conclusion"] as? String,
+                                // Kiểm tra kỹ kiểu dữ liệu của recordedAt
+                                recordedAt = when (val rawDate = labResultMap["recordedAt"]) {
+                                    is com.google.firebase.Timestamp -> rawDate.toDate() // Chuẩn Firestore
+                                    is Date -> rawDate // Trường hợp hiếm
+                                    else -> null
+                                }
+                            )
+                        } else {
+                            null
+                        }
+
+
+                        // Map dữ liệu vào Model
                         EmergencyDonationRecord(
                             id = donorDoc.id,
                             requestId = parentRef?.id ?: "",
@@ -112,14 +151,20 @@ class EmergencyRepositoryImpl @Inject constructor(
                             userBloodType = donorDoc.getString("userBloodType") ?: "",
                             certificateUrl = donorDoc.getString("certificateUrl"),
                             rating = donorDoc.getLong("rating")?.toInt() ?: 0,
-                            review = donorDoc.getString("review")
+                            review = donorDoc.getString("review"),
+
+                            // Gán kết quả xét nghiệm vừa map được
+                            labResult = labResult,
+                            rejectionReason = donorDoc.getString("rejectionReason")
                         )
                     }
-                }.awaitAll() // Chờ tất cả các request cha hoàn thành
+                }.awaitAll()
             }
 
+            val sortedList = historyList.sortedByDescending { it.pledgedAt }
+
             // Sắp xếp theo ngày mới nhất
-            Result.success(historyList.sortedByDescending { it.pledgedAt })
+            Result.success(sortedList)
         } catch (e: Exception) {
             Result.failure(e)
         }

@@ -3,6 +3,7 @@ package com.example.feature_profile.ui
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,6 +23,7 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -130,10 +132,19 @@ fun ProfileScreen(
                 if (state.pledgedRequests.isNotEmpty()) {
                     item { SectionHeader("Yêu cầu đã chấp nhận") }
                     items(state.pledgedRequests) { request ->
+
+                        // Định dạng ngày giờ
+                        val dateFormat = remember { SimpleDateFormat("HH:mm - dd/MM/yyyy", Locale.getDefault()) }
+
+                        // Ưu tiên hiển thị ngày người dùng chấp nhận
+                        val displayDate = request.userPledgedDate ?: request.createdAt
+                        val dateLabel = if (request.userPledgedDate != null) "Đã nhận lúc:" else "Ngày tạo:"
+
                         GenericInfoCard(
                             title = request.hospitalName,
-                            detailLine1 = "Cần nhóm máu: ${request.bloodType}",
-                            detailLine2 = "Ngày tạo: ${formatDate(request.createdAt)}",
+                            detailLine1 = "Cần nhóm máu: ${request.bloodType} (${request.preferredVolume})",
+                            // --- CẬP NHẬT DÒNG NÀY ---
+                            detailLine2 = "$dateLabel ${dateFormat.format(displayDate)}",
                             status = "ĐÃ CHẤP NHẬN",
                             statusColor = Color(0xFF1976D2)
                         )
@@ -341,6 +352,7 @@ fun ProfileHeaderSection(
         modifier = Modifier.fillMaxWidth(),
         contentAlignment = Alignment.TopCenter
     ) {
+        // ... (Phần Background giữ nguyên) ...
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -355,6 +367,7 @@ fun ProfileHeaderSection(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(top = 100.dp)
         ) {
+            // ... (Phần Avatar giữ nguyên) ...
             Box(contentAlignment = Alignment.Center) {
                 Surface(
                     shape = CircleShape,
@@ -377,7 +390,7 @@ fun ProfileHeaderSection(
                         )
                     }
                 }
-
+                // ... (Icon Camera nhỏ giữ nguyên) ...
                 Surface(
                     shape = CircleShape,
                     color = Color(0xFFE0E0E0),
@@ -402,6 +415,7 @@ fun ProfileHeaderSection(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Tên và Email
             Text(
                 text = profile.fullName,
                 style = MaterialTheme.typography.headlineMedium,
@@ -416,18 +430,69 @@ fun ProfileHeaderSection(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Surface(
-                color = PrimaryRed.copy(alpha = 0.1f),
-                shape = RoundedCornerShape(20.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryRed.copy(alpha = 0.2f))
+            // --- CẬP NHẬT MỚI: HUY HIỆU & SỐ LẦN HIẾN ---
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "Nhóm máu: ${profile.bloodType ?: "Chưa cập nhật"}",
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = PrimaryRedDark,
-                    fontWeight = FontWeight.Bold
-                )
+                // Badge Nhóm máu
+                Surface(
+                    color = PrimaryRed.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(20.dp),
+                    border = BorderStroke(1.dp, PrimaryRed.copy(alpha = 0.2f))
+                ) {
+                    Text(
+                        text = "Nhóm: ${profile.bloodType ?: "N/A"}",
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = PrimaryRedDark,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                // Badge Số lần hiến
+                Surface(
+                    color = Color(0xFFE3F2FD), // Xanh nhạt
+                    shape = RoundedCornerShape(20.dp),
+                    border = BorderStroke(1.dp, Color(0xFF2196F3).copy(alpha = 0.3f))
+                ) {
+                    Text(
+                        text = "${profile.donationCount} lần hiến",
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = Color(0xFF1565C0), // Xanh đậm
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            // Badge Ưu tiên (Chỉ hiện nếu isPriority = true)
+            if (profile.isPriority) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Surface(
+                    color = Color(0xFFFFF8E1), // Vàng nhạt
+                    shape = RoundedCornerShape(20.dp),
+                    border = BorderStroke(1.dp, Color(0xFFFFC107))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = null,
+                            tint = Color(0xFFFFC107), // Màu vàng
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Người hiến ưu tiên",
+                            style = MaterialTheme.typography.labelLarge,
+                            color = Color(0xFFFF8F00), // Cam đậm
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             }
         }
     }

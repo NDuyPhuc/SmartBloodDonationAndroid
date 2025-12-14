@@ -15,7 +15,7 @@ import javax.inject.Inject
 
 // Lớp Event để giao tiếp từ UI -> ViewModel
 sealed class DashboardEvent {
-    data class OnAcceptRequestClicked(val requestId: String) : DashboardEvent()
+    data class OnAcceptRequestClicked(val requestId: String, val volume: String) : DashboardEvent()
     object OnPledgeSuccessMessageShown : DashboardEvent()
 }
 
@@ -29,7 +29,9 @@ data class DashboardState(
     val nextDonationMessage: String = "",
     val displayableEmergencyRequests: List<BloodRequest> = emptyList(),
     val error: String? = null,
-    val pledgeSuccess: Boolean = false
+    val pledgeSuccess: Boolean = false,
+    val isEligibleToDonate: Boolean = true, // Mặc định cho phép
+    val daysToWait: Long = 0 // Số ngày cần chờ
 )
 
 @HiltViewModel
@@ -51,7 +53,7 @@ class DashboardViewModel @Inject constructor(
 
     fun onEvent(event: DashboardEvent) {
         when (event) {
-            is DashboardEvent.OnAcceptRequestClicked -> acceptRequest(event.requestId)
+            is DashboardEvent.OnAcceptRequestClicked -> acceptRequest(event.requestId, event.volume)
             DashboardEvent.OnPledgeSuccessMessageShown -> _state.update { it.copy(pledgeSuccess = false, error = null) }
         }
     }
@@ -62,6 +64,7 @@ class DashboardViewModel @Inject constructor(
             _state.update { it.copy(isLoadingProfile = true) }
             val profileResult = getUserProfileUseCase() // Lấy thông tin user một lần
             profileResult.onSuccess { userProfile ->
+                val (eligible, days) = checkEligibility(userProfile.lastDonationDate)
                 _state.update {
                     it.copy(
                         isLoadingProfile = false,
@@ -116,26 +119,46 @@ class DashboardViewModel @Inject constructor(
             }.collect() // Bắt đầu lắng nghe
         }
     }
+    private fun checkEligibility(lastDateStr: String?): Pair<Boolean, Long> {
+        if (lastDateStr.isNullOrBlank()) return Pair(true, 0)
 
-    private fun acceptRequest(requestId: String) {
+        try {
+            val dateFormat = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
+            val lastDate = dateFormat.parse(lastDateStr) ?: return Pair(true, 0)
+
+            val calendar = java.util.Calendar.getInstance()
+            calendar.time = lastDate
+            calendar.add(java.util.Calendar.DAY_OF_YEAR, 84) // Cộng 84 ngày
+
+            val eligibleDate = calendar.time
+            val today = java.util.Date()
+
+            if (eligibleDate.after(today)) {
+                val diff = eligibleDate.time - today.time
+                val days = java.util.concurrent.TimeUnit.MILLISECONDS.toDays(diff) + 1
+                return Pair(false, days)
+            }
+        } catch (e: Exception) {
+            return Pair(true, 0) // Lỗi format thì cho phép (hoặc chặn tùy logic)
+        }
+        return Pair(true, 0)
+    }
+    private fun acceptRequest(requestId: String, volume: String) {
         viewModelScope.launch {
             _state.update { it.copy(isPledging = true, error = null) }
 
             val profileResult = getUserProfileUseCase()
-            if (profileResult.isFailure) {
-                _state.update { it.copy(isPledging = false, error = "Không thể lấy thông tin người dùng để xác nhận.") }
-                return@launch
-            }
-
+            // ... (Phần kiểm tra profile giữ nguyên) ...
             val userProfile = profileResult.getOrNull()
             if (userProfile == null) {
                 _state.update { it.copy(isPledging = false, error = "Không tìm thấy hồ sơ người dùng.") }
                 return@launch
             }
 
-            val acceptResult = acceptEmergencyRequestUseCase(requestId, userProfile)
+            // Gọi UseCase với volume
+            val acceptResult = acceptEmergencyRequestUseCase(requestId, userProfile, volume)
+
             acceptResult.onSuccess {
-                // Chỉ cần bật cờ thành công. Flow sẽ tự động cập nhật danh sách.
                 _state.update { it.copy(isPledging = false, pledgeSuccess = true) }
             }.onFailure { error ->
                 _state.update { it.copy(isPledging = false, error = "Lỗi: ${error.message}") }
